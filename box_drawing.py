@@ -36,28 +36,7 @@
     * https://docs.python.org/3/library/curses.html
 """
 
-
-import curses
-
-
-# These next two functions are not used here, but they demonstrate one way to
-# start and end a curses session. Below I've opted to use the convenient
-# curses.wrapper() idiom instead.
-
-def start_curses():
-    stdscr = curses.initscr()
-    curses.noecho()
-    curses.cbreak()
-    stdscr.keypad(True)
-    return stdscr
-
-def end_curses(stdscr):
-    stdscr.keypad(False)
-    curses.nocbreak()
-    curses.echo()
-    curses.endwin()
-
-def add_box_char(stdscr, y, x, dirs, name_char=False):
+def add_char(stdscr, y, x, dirs, name_char=False):
     """ Print a single box-drawing character at (x, y) based on the direction
         set given in `dirs`, which is expected to have elements from
         'up', 'down', 'left', 'right'. The `dirs` set cannot be a singleton.
@@ -96,6 +75,7 @@ def add_box_char(stdscr, y, x, dirs, name_char=False):
     if name_char:
         stdscr.addstr(y, x + 2, hex(chr_code))
 
+# TODO: Either drop this or make it more general.
 def draw_grid(stdscr):
 
     xmin, xmax = 64, 128
@@ -120,33 +100,3 @@ def draw_grid(stdscr):
                 dirs -= {'down'}
 
             add_box_char(stdscr, y, x, dirs)
-
-def main(stdscr):
-
-    curses.curs_set(False)
-    stdscr.clear()
-
-    stdscr.addstr(1, 1, 'Press any key to quit.')
-
-    # Demonstrate how we can render a full grid to screen.
-    draw_grid(stdscr)
-
-    # This is a little test for add_box_char().
-    empty = set()
-    x = 5
-    y = 20
-    for a in [empty, {'up'}]:
-        for b in [empty, {'down'}]:
-            for c in [empty, {'left'}]:
-                for d in [empty, {'right'}]:
-                    dirs = a.union(b).union(c).union(d)
-                    if len(dirs) < 2:
-                        continue
-                    stdscr.addstr(y, x + 9, str(dirs))
-                    add_box_char(stdscr, y, x, dirs, name_char=True)
-                    y += 2
-
-    stdscr.refresh()
-    key = stdscr.getkey()  # This is how you can capture key info.
-
-curses.wrapper(main)
