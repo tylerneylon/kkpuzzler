@@ -56,16 +56,21 @@ class Puzzle(object):
                 if y == ymax:
                     dirs -= {'down'}
 
+                if len(dirs) > 0:
+                    box_drawing.add_char(stdscr, y, x, dirs)
+                    continue
+
+                ch = ' '
+
                 # Check to see if this is a cursor character.
-                if len(dirs) == 0 and self.cursor:
+                if self.cursor:
                     grid_x = (x - x0) // self.x_stride
                     grid_y = (y - y0) // self.y_stride
 
-                    if self.cursor == (grid_x, grid_y):
-                        stdscr.addstr(y, x, '*')
+                    if tuple(self.cursor) == (grid_x, grid_y):
+                        ch = '*'
 
-                box_drawing.add_char(stdscr, y, x, dirs)
-
+                stdscr.addstr(y, x, ch)
 
 
 # ______________________________________________________________________
@@ -83,19 +88,31 @@ def main(stdscr):
     curses.curs_set(False)  # Hide the text cursor.
     stdscr.clear()
 
-    y, x = stdscr.getmaxyx()
-    stdscr.addstr(2, 2, f'max (x, y) = ({x}, {y})')
+    h, w = stdscr.getmaxyx()
+    # stdscr.addstr(2, 2, f'max (x, y) = ({x}, {y})')  # XXX
 
     puzzle = Puzzle(7)
-    puzzle.cursor = (0, 0)
+    puzzle.cursor = [0, 0]
+
+    puzzle_size_x = puzzle.size * puzzle.x_stride
+    puzzle_size_y = puzzle.size * puzzle.y_stride
+
+    x0 = (w - puzzle_size_x) // 2
+    y0 = (h - puzzle_size_y) // 2
+
+    movements = {'h': (-1, 0), 'j': (0, 1), 'k': (0, -1), 'l': (1, 0)}
 
     while True:
-        puzzle.draw(stdscr, 10, 10)
+        puzzle.draw(stdscr, x0, y0)
         stdscr.refresh()
         key = stdscr.getkey()
 
         if key == 'q' or key == 'Q':
             break
+        elif key in 'hjkl':
+            for i in range(2):
+                puzzle.cursor[i] += movements[key][i]
+                puzzle.cursor[i] = puzzle.cursor[i] % puzzle.size
 
 if __name__ == '__main__':
     curses.wrapper(main)
