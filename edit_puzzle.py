@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ edit_puzzle.py
 
     This is a script to edit a KenKen puzzle.
@@ -25,13 +26,48 @@ import box_drawing
 class Puzzle(object):
 
     def __init__(self, size):
-        self.groups = []
+        self.groups = []  # Each group is a list of points.
         self.size = size
 
         self.x_stride = 10
         self.y_stride = 5
 
         self.cursor = None
+
+    def join(self, a, b):
+        """ This joins the group including point a with the group including
+            point b.
+        """
+
+        # Do this so the objects cannot later change.
+        a = tuple(a)
+        b = tuple(b)
+
+        # TODO: Once I'm confident, remove debugging prints.
+
+        dbgpr('Merging', a, 'and', b)
+
+        a_group = [(i, g) for i, g in enumerate(self.groups) if a in g]
+        b_group = [(i, g) for i, g in enumerate(self.groups) if b in g]
+
+        dbgpr('a_group:', a_group)
+        dbgpr('b_group:', b_group)
+
+        if a_group and b_group:
+            dbgpr('Clause 1')
+            a_group[0][1].extend(b_group[0][1])
+            del self.groups[b_group[0][0]]
+        elif a_group or b_group:
+            dbgpr('Clause 2')
+            grp = a_group[0][1] if a_group else b_group[0][1]
+            if a not in grp: grp.append(a)
+            if b not in grp: grp.append(b)
+        else:
+            dbgpr('Clause 3')
+            self.groups.append([a, b])
+
+        # XXX
+        dbgpr('At end of join, self.groups =', self.groups)
 
     def draw(self, stdscr, x0, y0):
 
@@ -76,6 +112,10 @@ class Puzzle(object):
 # ______________________________________________________________________
 # Functions
 
+# A debug print function.
+def dbgpr(*args):
+    pass
+
 
 # ______________________________________________________________________
 # Main
@@ -113,6 +153,17 @@ def main(stdscr):
             for i in range(2):
                 puzzle.cursor[i] += movements[key][i]
                 puzzle.cursor[i] = puzzle.cursor[i] % puzzle.size
+        elif key in 'HJKL':
+            newspace = [0, 0]
+            for i in range(2):
+                newspace[i] = puzzle.cursor[i] + movements[key.lower()][i]
+                # Don't merge cells in a wrap-around manner.
+                if newspace[i] < 0 or newspace[i] == puzzle.size:
+                    break
+                newspace[i] %= puzzle.size
+            else:  # nobreak
+                puzzle.join(puzzle.cursor, newspace)
+                puzzle.cursor = newspace
 
 if __name__ == '__main__':
     curses.wrapper(main)
