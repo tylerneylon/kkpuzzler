@@ -14,6 +14,7 @@
 # Imports
 
 import curses
+import math
 
 import box_drawing
 
@@ -69,6 +70,13 @@ class Puzzle(object):
         # XXX
         dbgpr('At end of join, self.groups =', self.groups)
 
+    def are_grouped(self, a, b):
+        a_group = [(i, g) for i, g in enumerate(self.groups) if a in g]
+        b_group = [(i, g) for i, g in enumerate(self.groups) if b in g]
+        if not a_group or not b_group:
+            return False
+        return a_group[0][0] == b_group[0][0]
+
     def draw(self, stdscr, x0, y0):
 
         xmax = x0 + self.size * self.x_stride
@@ -77,12 +85,25 @@ class Puzzle(object):
         for x in range(x0, xmax + 1):
             for y in range(y0, ymax + 1):
 
+                xval = (x - x0) / self.x_stride
+                yval = (y - y0) / self.y_stride
+
+                x1 = math.ceil (xval - 1)
+                x2 = math.floor(xval)
+                y1 = math.ceil (yval - 1)
+                y2 = math.floor(yval)
+
                 dirs = set()
                 if (x - x0) % self.x_stride == 0:
-                    dirs |= {'up', 'down'}
+                    if not self.are_grouped((x1, y1), (x2, y1)):
+                        dirs.add('up')
+                    if not self.are_grouped((x1, y2), (x2, y2)):
+                        dirs.add('down')
                 if (y - y0) % self.y_stride == 0:
-                    dirs |= {'left', 'right'}
-
+                    if not self.are_grouped((x1, y1), (x1, y2)):
+                        dirs.add('left')
+                    if not self.are_grouped((x2, y1), (x2, y2)):
+                        dirs.add('right')
                 if x == x0:
                     dirs -= {'left'}
                 if y == y0:
@@ -99,11 +120,8 @@ class Puzzle(object):
                 ch = ' '
 
                 # Check to see if this is a cursor character.
-                if self.cursor:
-                    grid_x = (x - x0) // self.x_stride
-                    grid_y = (y - y0) // self.y_stride
-
-                    if tuple(self.cursor) == (grid_x, grid_y):
+                if self.cursor and x1 == x2 and y1 == y2:
+                    if tuple(self.cursor) == (x1, y1):
                         ch = '*'
 
                 stdscr.addstr(y, x, ch)
