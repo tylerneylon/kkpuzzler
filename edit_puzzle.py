@@ -35,6 +35,71 @@ class Puzzle(object):
 
         self.cursor = None
 
+    def toggle_join(self, a, b):
+        """ If points a and b are already joined, this splits them.
+            Otherwise, it joins their groups.
+        """
+
+        # Point lookups can fail if these are lists instead of tuples.
+        a = tuple(a)
+        b = tuple(b)
+
+        if self.are_grouped(a, b):
+            self.split(a, b)
+        else:
+            self.join(a, b)
+
+    def find_all_paths(self, start, end, group, exclude=set()):
+        """ This returns a list of paths from `start` to `end` in `group`.
+            Each path is a list of points that begins with `start` and ends with
+            (wait for it) `end`.
+        """
+
+        if start == end:
+            return [[start]]
+
+        pt_set = frozenset(group)  # Support fast inclusion checks.
+        dirs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        paths = []
+        for dir_ in dirs:
+            next_ = tuple(start[i] + dir_[i] for i in [0, 1])
+            if next_ not in group or next_ in exclude:
+                continue
+            new_exclude = exclude | {start}
+            path_ends = self.find_all_paths(next_, end, group, new_exclude)
+            for path_end in path_ends:
+                paths.append([start] + path_end)
+        return paths
+
+    def split(self, a, b):
+        """ This splits the group containing a and the group containing b. In
+            some cases, this isn't as simple as inserting a single wall - in
+            particular, when there is more than one path between a and b. In
+            that case, we simply pull b out of the group.
+        """
+
+        if not self.are_grouped(a, b):
+            return
+
+        orig_group = [g for g in self.groups if a in g][0]
+
+        if len(self.find_all_paths(a, b, orig_group)) > 1:
+            orig_group.remove(b)
+            return
+
+        new_a_group = []
+        new_b_group = []
+        for pt in orig_group:
+            path = self.find_all_paths(pt, b, orig_group)[0]
+            if a in path:
+                new_a_group.append(pt)
+            else:
+                new_b_group.append(pt)
+
+        self.groups.remove(orig_group)
+        if len(new_a_group) > 1: self.groups.append(new_a_group)
+        if len(new_b_group) > 1: self.groups.append(new_b_group)
+
     def join(self, a, b):
         """ This joins the group including point a with the group including
             point b.
@@ -122,7 +187,7 @@ class Puzzle(object):
                 # Check to see if this is a cursor character.
                 if self.cursor and x1 == x2 and y1 == y2:
                     if tuple(self.cursor) == (x1, y1):
-                        ch = '*'
+                        ch = '.'
 
                 stdscr.addstr(y, x, ch)
 
@@ -180,7 +245,7 @@ def main(stdscr):
                     break
                 newspace[i] %= puzzle.size
             else:  # nobreak
-                puzzle.join(puzzle.cursor, newspace)
+                puzzle.toggle_join(puzzle.cursor, newspace)
                 puzzle.cursor = newspace
 
 if __name__ == '__main__':
