@@ -128,6 +128,12 @@ def get_line(stdscr, prompt=''):
     stdscr.refresh()
     return None if value is None else value.rstrip()
 
+def show_status(stdscr, status_str):
+    """ Erase the old bottom of the screen and replace it with status_str. """
+    h, w = stdscr.getmaxyx()
+    stdscr.addstr(h - 1, 0, status_str + (' ' * (w - len(status_str) - 1)))
+    stdscr.refresh()
+
 # TODO: Either drop this or make it more general.
 def draw_grid(stdscr):
 

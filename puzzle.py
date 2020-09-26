@@ -8,6 +8,7 @@
 # ______________________________________________________________________
 # Imports
 
+import json
 import math
 
 import drawing
@@ -182,6 +183,24 @@ class Puzzle(object):
                         ch = '.'
 
                 stdscr.addstr(y, x, ch)
+
+    def write(self, filename):
+        """ Save this puzzle to `filename`. """
+
+        info_obj = {
+                "groups": self.groups,
+                "size"  : self.size
+        }
+
+        wrapper_obj = {
+                "format_name"   : "kkpuzzle",
+                "format_url"    : "<pending>",
+                "format_version": "0.1",
+                "info"          : info_obj
+        }
+
+        with open(filename, 'w') as f:
+            json.dump(wrapper_obj, f, indent=4)
 
 
 # ______________________________________________________________________

@@ -68,6 +68,9 @@ def main(stdscr):
                 puzzle.cursor = newspace
         elif key == 'w':
             line = drawing.get_line(stdscr, ':w ')
+            filename = f'{line}.kk'
+            puzzle.write(filename)
+            drawing.show_status(stdscr, f'Puzzle written to {filename}')
             # TODO: Actually save to a file. Probably put this in a fn.
 
 if __name__ == '__main__':
