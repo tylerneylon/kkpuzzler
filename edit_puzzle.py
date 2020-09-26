@@ -14,6 +14,7 @@
 # Imports
 
 import curses
+import sys
 
 import drawing
 from puzzle import Puzzle
@@ -30,15 +31,18 @@ def main(stdscr):
     curses.curs_set(False)  # Hide the text cursor.
     stdscr.clear()
 
-    h, w = stdscr.getmaxyx()
-    # stdscr.addstr(2, 2, f'max (x, y) = ({x}, {y})')  # XXX
-
     puzzle = Puzzle(6)
     puzzle.cursor = [0, 0]
+
+    # Check to see if we should load a puzzle.
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+        puzzle.read(filename)
 
     puzzle_size_x = puzzle.size * puzzle.x_stride
     puzzle_size_y = puzzle.size * puzzle.y_stride
 
+    h, w = stdscr.getmaxyx()
     x0 = (w - puzzle_size_x) // 2
     y0 = (h - puzzle_size_y) // 2
 

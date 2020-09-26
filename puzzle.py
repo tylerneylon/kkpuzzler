@@ -19,7 +19,7 @@ import drawing
 
 class Puzzle(object):
 
-    def __init__(self, size):
+    def __init__(self, size=4):
         self.groups = []  # Each group is a list of points.
         self.size = size
 
@@ -188,19 +188,30 @@ class Puzzle(object):
         """ Save this puzzle to `filename`. """
 
         info_obj = {
-                "groups": self.groups,
-                "size"  : self.size
+                'groups': self.groups,
+                'size'  : self.size
         }
 
         wrapper_obj = {
-                "format_name"   : "kkpuzzle",
-                "format_url"    : "<pending>",
-                "format_version": "0.1",
-                "info"          : info_obj
+                'format_name'   : 'kkpuzzle',
+                'format_url'    : '<pending>',
+                'format_version': '0.1',
+                'info'          : info_obj
         }
 
         with open(filename, 'w') as f:
-            json.dump(wrapper_obj, f, indent=4)
+            json.dump(wrapper_obj, f)
+
+    def read(self, filename):
+        with open(filename) as f:
+            data = json.load(f)
+        assert 'format_name' in data and data['format_name'] == 'kkpuzzle'
+        info = data['info']
+        self.size = info['size']
+        self.groups = [
+                [tuple(pt) for pt in group]
+                for group in info['groups']
+        ]
 
 
 # ______________________________________________________________________
