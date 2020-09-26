@@ -1,4 +1,4 @@
-""" box_drawing.py
+""" drawing.py
 
     The main function here is add_box_char(), which provides a user-friendly
     interface to render line-drawings, often referred to as "box-drawing," in a
@@ -35,6 +35,17 @@
     * https://docs.python.org/3/howto/curses.html
     * https://docs.python.org/3/library/curses.html
 """
+
+
+# ______________________________________________________________________
+# Imports
+
+import curses
+import curses.textpad
+
+
+# ______________________________________________________________________
+# Public functions
 
 def add_char(stdscr, y, x, dirs, name_char=False):
     """ Print a single box-drawing character at (x, y) based on the direction
@@ -74,6 +85,48 @@ def add_char(stdscr, y, x, dirs, name_char=False):
     stdscr.addstr(y, x, chr(chr_code))
     if name_char:
         stdscr.addstr(y, x + 2, hex(chr_code))
+
+# Modify Textbox behavior to work better with backspaces.
+class Textbox(curses.textpad.Textbox):
+
+    def edit(self, validate=None):
+        self.did_escape = False
+        return super().edit(validate)
+
+    # This is the main modification. We handle character 127 as delete, and
+    # character 27 as escape, which causes a None return value.
+    def do_command(self, ch):
+        with open('commands.txt', 'a') as f:
+            f.write(str(ch))
+            f.write('\n')
+        if ch == 127:
+            ch = curses.KEY_BACKSPACE
+        if ch == 27:
+            self.did_escape = True
+            return False
+        return super().do_command(ch)
+
+    def gather(self):
+        if self.did_escape:
+            return None
+        return super().gather()
+
+def get_line(stdscr, prompt=''):
+    """ Collect a line of input from the user. This is a long-running
+        synchronous operation.
+    """
+    h, w = stdscr.getmaxyx()
+    stdscr.addstr(h - 1, 0, prompt)
+    stdscr.refresh()
+    subwin = stdscr.subwin(h - 1, len(prompt))
+    textbox = Textbox(subwin)
+    prev_state = curses.curs_set(1)
+    # Give the user control for a bit. What could go wrong?
+    value = textbox.edit()
+    curses.curs_set(prev_state)
+    stdscr.addstr(h - 1, 0, ' ' * (w - 1))
+    stdscr.refresh()
+    return None if value is None else value.rstrip()
 
 # TODO: Either drop this or make it more general.
 def draw_grid(stdscr):

@@ -16,7 +16,7 @@
 import curses
 import math
 
-import box_drawing
+import drawing
 
 
 # ______________________________________________________________________
@@ -179,7 +179,7 @@ class Puzzle(object):
                     dirs -= {'down'}
 
                 if len(dirs) > 0:
-                    box_drawing.add_char(stdscr, y, x, dirs)
+                    drawing.add_char(stdscr, y, x, dirs)
                     continue
 
                 ch = ' '
@@ -214,7 +214,7 @@ def main(stdscr):
     h, w = stdscr.getmaxyx()
     # stdscr.addstr(2, 2, f'max (x, y) = ({x}, {y})')  # XXX
 
-    puzzle = Puzzle(7)
+    puzzle = Puzzle(6)
     puzzle.cursor = [0, 0]
 
     puzzle_size_x = puzzle.size * puzzle.x_stride
@@ -247,6 +247,9 @@ def main(stdscr):
             else:  # nobreak
                 puzzle.toggle_join(puzzle.cursor, newspace)
                 puzzle.cursor = newspace
+        elif key == 'w':
+            line = drawing.get_line(stdscr, ':w ')
+            # TODO: Actually save to a file. Probably put this in a fn.
 
 if __name__ == '__main__':
     curses.wrapper(main)
