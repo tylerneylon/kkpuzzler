@@ -26,7 +26,15 @@ class Puzzle(object):
         self.x_stride = 10
         self.y_stride = 5
 
-        self.cursor = None
+        self.cursor = [0, 0]
+
+    # I'm calling this "reset" rather than "set" because it involves potentially
+    # throwing away quite a bit of data.
+    def reset_size(self, new_size):
+        if new_size < self.size:
+            self.groups = []
+        self.size = new_size
+        self.cursor = [0, 0]
 
     def toggle_join(self, a, b):
         """ If points a and b are already joined, this splits them.

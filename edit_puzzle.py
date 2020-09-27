@@ -21,12 +21,45 @@ from puzzle import Puzzle
 
 
 # ______________________________________________________________________
+# Globals
+
+stdscr = None
+
+
+# ______________________________________________________________________
+# Functions
+
+def show_status(status):
+    global stdscr
+    drawing.show_status(stdscr, status)
+
+def refresh_screen(puzzle):
+    """ Erase the screen and recalculate the upper-left corner of a puzzle.
+        This is useful when either the screen or the puzzle is resized, or
+        on initialization.
+    """
+
+    global stdscr
+    stdscr.erase()
+
+    puzzle_size_x = puzzle.size * puzzle.x_stride
+    puzzle_size_y = puzzle.size * puzzle.y_stride
+    h, w = stdscr.getmaxyx()
+    x0 = (w - puzzle_size_x) // 2
+    y0 = (h - puzzle_size_y) // 2
+
+    return x0, y0
+
+
+# ______________________________________________________________________
 # Main
 
-def main(stdscr):
+def main(stdscr_):
 
-    # XXX
-    global key
+    # I use a global for `stdscr` to simplify sharing it with other functions
+    # (like show_status()) within this file.
+    global stdscr
+    stdscr = stdscr_
 
     curses.curs_set(False)  # Hide the text cursor.
     stdscr.clear()
@@ -39,12 +72,7 @@ def main(stdscr):
         filename = sys.argv[1]
         puzzle.read(filename)
 
-    puzzle_size_x = puzzle.size * puzzle.x_stride
-    puzzle_size_y = puzzle.size * puzzle.y_stride
-
-    h, w = stdscr.getmaxyx()
-    x0 = (w - puzzle_size_x) // 2
-    y0 = (h - puzzle_size_y) // 2
+    x0, y0 = refresh_screen(puzzle)
 
     movements = {'h': (-1, 0), 'j': (0, 1), 'k': (0, -1), 'l': (1, 0)}
 
@@ -74,10 +102,16 @@ def main(stdscr):
             line = drawing.get_line(stdscr, ':w ')
             filename = f'{line}.kk'
             puzzle.write(filename)
-            drawing.show_status(stdscr, f'Puzzle written to {filename}')
-            # TODO: Actually save to a file. Probably put this in a fn.
+            show_status(f'Puzzle written to {filename}')
+        elif key == 's':
+            line = drawing.get_line(stdscr, ':s ')
+            try:
+                new_size = int(line)
+            except:
+                show_status(f'Unable to parse as an integer: "{line}"')
+                continue
+            puzzle.reset_size(new_size)
+            x0, y0 = refresh_screen(puzzle)
 
 if __name__ == '__main__':
     curses.wrapper(main)
-
-    print(f'key = {key}')
