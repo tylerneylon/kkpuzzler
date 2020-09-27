@@ -81,13 +81,18 @@ def main(stdscr_):
         stdscr.refresh()
         key = stdscr.getkey()
 
-        if key == 'q' or key == 'Q':
+        if key == 'q' or key == 'Q':  #### qQ   = Quit
+
             break
-        elif key in 'hjkl':
+
+        elif key in 'hjkl':           #### hjkl = cursor movement
+
             for i in range(2):
                 puzzle.cursor[i] += movements[key][i]
                 puzzle.cursor[i] = puzzle.cursor[i] % puzzle.size
-        elif key in 'HJKL':
+
+        elif key in 'HJKL':           #### HJKL = group editing
+
             newspace = [0, 0]
             for i in range(2):
                 newspace[i] = puzzle.cursor[i] + movements[key.lower()][i]
@@ -98,12 +103,16 @@ def main(stdscr_):
             else:  # nobreak
                 puzzle.toggle_join(puzzle.cursor, newspace)
                 puzzle.cursor = newspace
-        elif key == 'w':
+
+        elif key == 'w':              #### w    = Write (save) to a file
+
             line = drawing.get_line(stdscr, ':w ')
             filename = f'{line}.kk'
             puzzle.write(filename)
             show_status(f'Puzzle written to {filename}')
-        elif key == 's':
+
+        elif key == 's':              #### s    = set the puzzle Size
+
             line = drawing.get_line(stdscr, ':s ')
             try:
                 new_size = int(line)
