@@ -16,6 +16,7 @@
 import curses
 import sys
 
+import dbg
 import drawing
 from puzzle import Puzzle
 
@@ -121,6 +122,17 @@ def main(stdscr_):
                 continue
             puzzle.reset_size(new_size)
             x0, y0 = refresh_screen(puzzle)
+
+        elif key == 'c':              #### c    = set the Clue
+
+            # A `subline` is (y, x1, x2).
+            subline = puzzle.get_clue_subline()
+            clue = drawing.edit_subline(stdscr, subline)
+            if clue is None:
+                continue
+            # TODO: Check if clue strings are valid. If not, we can highlight
+            #       them in red so users can correct them.
+            puzzle.set_clue_at_cursor(clue)
 
 if __name__ == '__main__':
     curses.wrapper(main)

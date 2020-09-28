@@ -143,7 +143,27 @@ class Puzzle(object):
             return False
         return a_group[0][0] == b_group[0][0]
 
+    def get_clue_subline(self):
+        """ Return (y, x1, x2) for the clue text area of the cursor's current
+            square. The valid x range is [x1, x2), excluding x2. """
+
+        # This only makes sense if this puzzle has been drawn (otherwise we
+        # won't have x0, y0 coordinates).
+        assert 'x0' in self.__dict__
+
+        y  = self.y0 + self.cursor[1] * self.y_stride + 1
+        x1 = self.x0 + self.cursor[0] * self.x_stride + 1
+        x2 = x1 + self.x_stride - 1
+
+        return (y, x1, x2)
+
+    def set_clue_at_cursor(self, clue):
+        pass  # XXX
+
     def draw(self, stdscr, x0, y0):
+
+        self.x0 = x0
+        self.y0 = y0
 
         xmax = x0 + self.size * self.x_stride
         ymax = y0 + self.size * self.y_stride

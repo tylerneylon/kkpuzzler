@@ -1,0 +1,6 @@
+[ ] Don't write to None.kk if they hit esc from the ":w" prompt.
+[ ] Maybe the entire puzzle (borders) are colored based on status:
+    * white  = in progress, incomplete
+    * red    = syntax issue with a clue
+    * yellow = complete puzzle but bad clues (either 0 or multiple solns)
+    * green  = complete, unique-solution puzzle

@@ -43,6 +43,8 @@
 import curses
 import curses.textpad
 
+import dbg
+
 
 # ______________________________________________________________________
 # Public functions
@@ -128,34 +130,37 @@ def get_line(stdscr, prompt=''):
     stdscr.refresh()
     return None if value is None else value.rstrip()
 
+def edit_subline(stdscr, subline):
+    """ Let the user edit the text within the given subline (y, x1, x2).
+        A subline has the x range [x1, x2).
+    """
+    y, x1, x2 = subline
+    subwin = stdscr.subwin(
+            1,        # nlines
+            x2 - x1,  # ncols
+            y,
+            x1
+    )
+    textbox = Textbox(subwin)
+    prev_state = curses.curs_set(1)
+    # Give the user control for a bit. What could go wrong?
+    value = textbox.edit()
+    curses.curs_set(prev_state)
+    # XXX
+    # stdscr.addstr(h - 1, 0, ' ' * (w - 1))
+    # stdscr.refresh()
+    return None if value is None else value.rstrip()
+
 def show_status(stdscr, status_str):
     """ Erase the old bottom of the screen and replace it with status_str. """
     h, w = stdscr.getmaxyx()
     stdscr.addstr(h - 1, 0, status_str + (' ' * (w - len(status_str) - 1)))
     stdscr.refresh()
 
-# TODO: Either drop this or make it more general.
-def draw_grid(stdscr):
+# TODO: Consider deleting this. I'm using it to help debug things.
+def highlight_subline(stdscr, subline):
+    curses.init_pair(1, 0, 63)
+    y, x1, x2 = subline
+    stdscr.addstr(y, x1, ' ' * (x2 - x1), curses.color_pair(1))
+    dbg.print(f'Wrote a line at (y, x): {y}, {x1} with width {x2 - x1}.')
 
-    xmin, xmax = 64, 128
-    ymin, ymax = 8, 32
-
-    for x in range(xmin, xmax + 1):
-        for y in range(ymin, ymax + 1):
-
-            dirs = set()
-            if x % 4 == 0:
-                dirs |= {'up', 'down'}
-            if y % 2 == 0:
-                dirs |= {'left', 'right'}
-
-            if x == xmin:
-                dirs -= {'left'}
-            if y == ymin:
-                dirs -= {'up'}
-            if x == xmax:
-                dirs -= {'right'}
-            if y == ymax:
-                dirs -= {'down'}
-
-            add_box_char(stdscr, y, x, dirs)
