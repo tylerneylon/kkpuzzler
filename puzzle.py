@@ -8,10 +8,19 @@
 # ______________________________________________________________________
 # Imports
 
+import curses
 import json
 import math
 
 import drawing
+
+
+# ______________________________________________________________________
+# Globals
+
+# These are curses color indexes.
+GROUP_HIGHLIGHT = 2
+BACKGROUND      = 3
 
 
 # ______________________________________________________________________
@@ -27,6 +36,10 @@ class Puzzle(object):
         self.y_stride = 5
 
         self.cursor = [0, 0]
+
+        # The format here is (index, foreground, background).
+        curses.init_pair(GROUP_HIGHLIGHT, 246, 235)
+        curses.init_pair(BACKGROUND, 7, 16)
 
     # I'm calling this "reset" rather than "set" because it involves potentially
     # throwing away quite a bit of data.
@@ -162,6 +175,14 @@ class Puzzle(object):
 
     def draw(self, stdscr, x0, y0):
 
+        # TODO Call this only once.
+        stdscr.bkgd(' ', curses.color_pair(BACKGROUND))
+
+        current_group = []
+        for group in self.groups:
+            if tuple(self.cursor) in group:
+                current_group = group
+
         self.x0 = x0
         self.y0 = y0
 
@@ -204,13 +225,17 @@ class Puzzle(object):
                     continue
 
                 ch = ' '
+                attr = curses.color_pair(0)
 
                 # Check to see if this is a cursor character.
                 if self.cursor and x1 == x2 and y1 == y2:
                     if tuple(self.cursor) == (x1, y1):
                         ch = '.'
+                        attr = curses.color_pair(GROUP_HIGHLIGHT)
+                    if (x1, y1) in current_group:
+                        attr = curses.color_pair(GROUP_HIGHLIGHT)
 
-                stdscr.addstr(y, x, ch)
+                stdscr.addstr(y, x, ch, attr)
 
     def write(self, filename):
         """ Save this puzzle to `filename`. """
