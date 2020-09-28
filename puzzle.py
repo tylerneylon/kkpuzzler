@@ -158,7 +158,7 @@ class Puzzle(object):
         return (y, x1, x2)
 
     def set_clue_at_cursor(self, clue):
-        pass  # XXX
+        pass  # XXX TODO
 
     def draw(self, stdscr, x0, y0):
 
