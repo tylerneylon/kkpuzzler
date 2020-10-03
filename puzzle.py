@@ -32,7 +32,9 @@ class Puzzle(object):
     # Constructor
 
     def __init__(self, size=4):
-        self.groups = []  # Each group is a list of points.
+        # Each group has the form [<clue_str>, <pt1>, <pt2>, <pt3>, ... ].
+        # Some points may be in no groups (for new/partial puzzles).
+        self.groups = []
         self.size = size
 
         self.x_stride = 10
@@ -88,9 +90,10 @@ class Puzzle(object):
             orig_group.remove(b)
             return
 
-        new_a_group = []
-        new_b_group = []
-        for pt in orig_group:
+        # We drop any clue from the old group being split.
+        new_a_group = ['']
+        new_b_group = ['']
+        for pt in orig_group[1:]:  # [1:] to skip the clue.
             path = self.find_all_paths(pt, b, orig_group)[0]
             if a in path:
                 new_a_group.append(pt)
@@ -98,8 +101,8 @@ class Puzzle(object):
                 new_b_group.append(pt)
 
         self.groups.remove(orig_group)
-        if len(new_a_group) > 1: self.groups.append(new_a_group)
-        if len(new_b_group) > 1: self.groups.append(new_b_group)
+        if len(new_a_group) > 2: self.groups.append(new_a_group)
+        if len(new_b_group) > 2: self.groups.append(new_b_group)
 
     def join(self, a, b):
         """ This joins the group including point a with the group including
@@ -122,7 +125,7 @@ class Puzzle(object):
 
         if a_group and b_group:
             dbgpr('Clause 1')
-            a_group[0][1].extend(b_group[0][1])
+            a_group[0][1].extend(b_group[0][1][1:])  # [1:] to skip b's clue.
             del self.groups[b_group[0][0]]
         elif a_group or b_group:
             dbgpr('Clause 2')
@@ -131,16 +134,33 @@ class Puzzle(object):
             if b not in grp: grp.append(b)
         else:
             dbgpr('Clause 3')
-            self.groups.append([a, b])
+            self.groups.append(['', a, b])
 
         # XXX
         dbgpr('At end of join, self.groups =', self.groups)
 
     def set_clue_at_cursor(self, clue):
-        pass  # XXX TODO
+        group = self.get_group_at_cursor()
+        group[0] = clue
 
     # __________________________________________________________________
     # Utility methods
+
+    def get_group_at_cursor(self):
+        """ If the cursor is in a group, this returns that group (as a list).
+            Otherwise, this creates a new group with the contents
+            ['', <cursor_point>], appends this group to self.groups, and returns
+            the new group. """
+        groups = [g for g in self.groups if tuple(self.cursor) in g]
+        assert len(groups) < 2
+
+        if len(groups) > 0:
+            return groups[0]
+
+        # We need to create a new group.
+        group = ['', tuple(self.cursor)]
+        self.groups.append(group)
+        return group
 
     def find_all_paths(self, start, end, group, exclude=set()):
         """ This returns a list of paths from `start` to `end` in `group`.
@@ -186,7 +206,7 @@ class Puzzle(object):
         if len(groups) > 0:
             group = groups[0]
             first_sq = sorted(
-                    group,
+                    group[1:],  # [1:] to skip the clue string.
                     key=lambda pt: self.size * pt[1] + pt[0]
             )[0]
             self.cursor = list(first_sq)
@@ -309,7 +329,8 @@ class Puzzle(object):
         info = data['info']
         self.size = info['size']
         self.groups = [
-                [tuple(pt) for pt in group]
+                # Ensure each group list has a string followed by tuples.
+                [group[0]] + [tuple(pt) for pt in group[1:]]
                 for group in info['groups']
         ]
 
