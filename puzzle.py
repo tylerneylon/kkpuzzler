@@ -94,6 +94,16 @@ class Puzzle(object):
         new_a_group = ['']
         new_b_group = ['']
         for pt in orig_group[1:]:  # [1:] to skip the clue.
+            # TODO I've occasionally seen this next line throw an IndexError.
+            #      I don't know exactly how to reproduce the error. The last
+            #      time I saw it, I was splitting up a large group into two
+            #      pieces, and I had to do it in mini-splits because the larger
+            #      group was strongly connected. Maybe run this via ipython -i
+            #      and try to %debug from there. Another route would be to try
+            #      to trigger ipdb on a caught exception here, but I'm not 100%
+            #      sure if the curses mode would mess up how we interact with
+            #      ipdb (I've seen ipython -i work from curses, so I'm more
+            #      confident about that approach).
             path = self.find_all_paths(pt, b, orig_group)[0]
             if a in path:
                 new_a_group.append(pt)
