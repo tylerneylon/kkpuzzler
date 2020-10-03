@@ -130,7 +130,11 @@ def main(stdscr_):
 
         elif key == 'f':              #### f    = Figure it out! (full soln)
 
-            solver.solve_puzzle(puzzle)
+            solns = solver.solve_puzzle(puzzle)
+            if len(solns) > 0:
+                # XXX
+                dbg.print('Adding the solution:', solns[0])
+                puzzle.add_solution(solns[0])
 
 if __name__ == '__main__':
     curses.wrapper(main)

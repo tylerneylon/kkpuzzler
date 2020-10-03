@@ -64,6 +64,10 @@ def solve_puzzle(puzzle):
         The solution is returned as a list of numbers in reading order; ie,
         corresponding to the squares (0, 0), (1, 0), (2, 0), .. <rest of row>,
         (0, 1), (1, 1), (2, 1), ... etc.
+
+        Actually this returns a list of all found solutions. Thus, if you want,
+        you could check to see if the list is empty (indicating there are no
+        valid solutions), or if multiple solutions are possible.
     """
 
     dbg.print('SOLVER INVOKED !!!!!! GET READDDDYYYYYY')
@@ -72,9 +76,9 @@ def solve_puzzle(puzzle):
 
     def is_soln_good(x, ell):
 
-        dbg.print()
-        dbg.print(f'  is_soln_good running on input:')
-        dbg.print(f'    {x[:ell]}')
+        # dbg.print()
+        # dbg.print(f'  is_soln_good running on input:')
+        # dbg.print(f'    {x[:ell]}')
 
         # First check that each row has unique elements.
         used_nums_per_col = defaultdict(set)
@@ -82,11 +86,11 @@ def solve_puzzle(puzzle):
             if i % N == 0:
                 used_nums_in_row = set()
             if elt in used_nums_in_row:
-                dbg.print(f'  No b/c idx {i} = {elt} is a row dup.')
+                # dbg.print(f'  No b/c idx {i} = {elt} is a row dup.')
                 return False
             col = i % N
             if elt in used_nums_per_col[col]:
-                dbg.print(f'  No b/c idx {i} = {elt} is a col dup.')
+                # dbg.print(f'  No b/c idx {i} = {elt} is a col dup.')
                 return False
             used_nums_per_col[col].add(elt)
             used_nums_in_row.add(elt)
@@ -99,8 +103,8 @@ def solve_puzzle(puzzle):
                 if i + N * j < ell
             ]
 
-            dbg.print(f'    Looking at the group: {group}')
-            dbg.print(f'    Got the numbers: {nums}')
+            # dbg.print(f'    Looking at the group: {group}')
+            # dbg.print(f'    Got the numbers: {nums}')
 
             if len(nums) == 0:
                 continue
@@ -111,7 +115,7 @@ def solve_puzzle(puzzle):
             if group[0][-1] not in '+-*/':
                 assert n_pts == 1
                 if nums[0] != int(group[0]):
-                    dbg.print(f'  No b/c given clue {group[0]} != num {nums[0]}')
+                    # dbg.print(f'  No b/c given clue {group[0]} != num {nums[0]}')
                     return False
                 else:
                     continue
@@ -134,10 +138,10 @@ def solve_puzzle(puzzle):
             if clue_op == '+':
                 sum_ = reduce(add, nums)
                 if len(nums) == n_pts and sum_ != clue_num:
-                    dbg.print(f'  No b/c clue {clue} != full sum {sum_}')
+                    # dbg.print(f'  No b/c clue {clue} != full sum {sum_}')
                     return False
                 if len(nums) < n_pts and sum_ >= clue_num:
-                    dbg.print(f'  No b/c clue {clue} <= partial sum {sum_}')
+                    # dbg.print(f'  No b/c clue {clue} <= partial sum {sum_}')
                     return False
 
             if clue_op == '*':
@@ -150,6 +154,10 @@ def solve_puzzle(puzzle):
         return True
 
     D = [list(range(1, N + 1)) for _ in range(N * N)]
+    solns = []
     for soln in algorithm_b([0] * (N * N), D, is_soln_good):
         dbg.print('I found a solution:')
         dbg.print(soln)
+        solns.append(soln[:])
+
+    return solns

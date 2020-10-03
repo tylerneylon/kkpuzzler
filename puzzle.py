@@ -35,6 +35,7 @@ class Puzzle(object):
         # Some points may be in no groups (for new/partial puzzles).
         self.groups = []
         self.size = size
+        self.solution = None
 
         self.x_stride = 10
         self.y_stride = 5
@@ -141,6 +142,9 @@ class Puzzle(object):
     def set_clue_at_cursor(self, clue):
         group = self.get_group_at_cursor()
         group[0] = clue
+
+    def add_solution(self, soln):
+        self.solution = soln
 
     # __________________________________________________________________
     # Utility methods
@@ -324,6 +328,14 @@ class Puzzle(object):
             clue_str = '%%-%ds' % (self.x_stride - 1) % group[0]
             stdscr.addstr(y, x, clue_str, curses.color_pair(0))
 
+        # Render the solution if we have one.
+        if self.solution is None:
+            return
+        for i, num in enumerate(self.solution):
+            x = x0 + (i % self.size)  * self.x_stride + 5
+            y = y0 + (i // self.size) * self.y_stride + 3
+            stdscr.addstr(y, x, str(num), curses.color_pair(0))
+
     # __________________________________________________________________
     # Methods that work with files
 
@@ -331,8 +343,9 @@ class Puzzle(object):
         """ Save this puzzle to `filename`. """
 
         info_obj = {
-                'groups': self.groups,
-                'size'  : self.size
+                'groups'  : self.groups,
+                'size'    : self.size,
+                'solution': self.solution
         }
 
         wrapper_obj = {
@@ -351,6 +364,7 @@ class Puzzle(object):
         assert 'format_name' in data and data['format_name'] == 'kkpuzzle'
         info = data['info']
         self.size = info['size']
+        self.solution = info.get('solution', None)
         self.groups = [
                 # Ensure each group list has a string followed by tuples.
                 [group[0]] + [tuple(pt) for pt in group[1:]]
