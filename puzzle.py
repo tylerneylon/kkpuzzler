@@ -146,21 +146,28 @@ class Puzzle(object):
     # __________________________________________________________________
     # Utility methods
 
-    def get_group_at_cursor(self):
-        """ If the cursor is in a group, this returns that group (as a list).
+    def get_group_at_point(self, pt):
+        """ If `pt` is in a group, this returns that group (as a list).
             Otherwise, this creates a new group with the contents
-            ['', <cursor_point>], appends this group to self.groups, and returns
+            ['', <pt>], appends this group to self.groups, and returns
             the new group. """
-        groups = [g for g in self.groups if tuple(self.cursor) in g]
+        groups = [g for g in self.groups if tuple(pt) in g]
         assert len(groups) < 2
 
         if len(groups) > 0:
             return groups[0]
 
         # We need to create a new group.
-        group = ['', tuple(self.cursor)]
+        group = ['', tuple(pt)]
         self.groups.append(group)
         return group
+
+    def get_group_at_cursor(self):
+        """ If the cursor is in a group, this returns that group (as a list).
+            Otherwise, this creates a new group with the contents
+            ['', <cursor_point>], appends this group to self.groups, and returns
+            the new group. """
+        return self.get_group_at_point(self.cursor)
 
     def find_all_paths(self, start, end, group, exclude=set()):
         """ This returns a list of paths from `start` to `end` in `group`.
@@ -191,6 +198,15 @@ class Puzzle(object):
             return False
         return a_group[0][0] == b_group[0][0]
 
+    def get_clue_point(self, group):
+        """ Return the point in group that ought to include the clue.
+            This is the first square in the group in Enslish reading order; ie,
+            we read lines left-to-right, starting at the top. """
+        return sorted(
+                group[1:],  # [1:] to skip the clue string.
+                key=lambda pt: self.size * pt[1] + pt[0]
+        )[0]
+
     def jump_to_clue_subline(self, stdscr):
         """ Jump the cursor to the clue-holding square for the current group,
             and return (y, x1, x2) for the clue text area of the cursor's (clue)
@@ -205,11 +221,7 @@ class Puzzle(object):
         groups = [g for g in self.groups if tuple(self.cursor) in g]
         if len(groups) > 0:
             group = groups[0]
-            first_sq = sorted(
-                    group[1:],  # [1:] to skip the clue string.
-                    key=lambda pt: self.size * pt[1] + pt[0]
-            )[0]
-            self.cursor = list(first_sq)
+            self.cursor = self.get_clue_point(group)
             self.draw(stdscr, self.x0, self.y0)
             stdscr.refresh()
 
@@ -288,6 +300,8 @@ class Puzzle(object):
                     drawing.add_char(stdscr, y, x, dirs)
                     continue
 
+                # If we get here, we're drawing in-square (not-border) chars.
+
                 ch = ' '
                 attr = curses.color_pair(0)
 
@@ -300,6 +314,16 @@ class Puzzle(object):
                         attr = curses.color_pair(GROUP_HIGHLIGHT)
 
                 stdscr.addstr(y, x, ch, attr)
+
+        # Render the clues.
+        for group in self.groups:
+            if group[0] == '':
+                continue
+            clue_pt = self.get_clue_point(group)
+            x = x0 + clue_pt[0] * self.x_stride + 1
+            y = y0 + clue_pt[1] * self.y_stride + 1
+            clue_str = '%%-%ds' % (self.x_stride - 1) % group[0]
+            stdscr.addstr(y, x, clue_str, curses.color_pair(0))
 
     # __________________________________________________________________
     # Methods that work with files
