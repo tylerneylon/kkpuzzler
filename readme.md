@@ -5,3 +5,4 @@
 
 - [ ] If someone executes ":w" alone, it saves to the current filename.
 - [ ] Saving to something with .kk doesn't add a new .kk extension.
+- [ ] Be able to resize the terminal.

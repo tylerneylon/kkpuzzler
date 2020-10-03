@@ -26,7 +26,7 @@ dbgout = open('dbg.out', 'a')
 
 def print(*args, **kwargs):
     end = kwargs.get('end', '\n')
-    dbgout.write(' '.join(args) + end)
+    dbgout.write(' '.join(map(str, args)) + end)
     dbgout.flush()
 
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """ puzzle.py
 
     The Puzzle class encapsulates a puzzle instance.
@@ -221,7 +220,7 @@ class Puzzle(object):
         groups = [g for g in self.groups if tuple(self.cursor) in g]
         if len(groups) > 0:
             group = groups[0]
-            self.cursor = self.get_clue_point(group)
+            self.cursor = list(self.get_clue_point(group))
             self.draw(stdscr, self.x0, self.y0)
             stdscr.refresh()
 

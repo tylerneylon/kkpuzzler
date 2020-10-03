@@ -18,6 +18,7 @@ import sys
 
 import dbg
 import drawing
+import solver
 from puzzle import Puzzle
 
 
@@ -126,6 +127,10 @@ def main(stdscr_):
         elif key == 'c':              #### c    = set the Clue
 
             puzzle.edit_clue(stdscr)
+
+        elif key == 'f':              #### f    = Figure it out! (full soln)
+
+            solver.solve_puzzle(puzzle)
 
 if __name__ == '__main__':
     curses.wrapper(main)
