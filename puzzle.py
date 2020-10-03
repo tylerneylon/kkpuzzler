@@ -28,6 +28,9 @@ BACKGROUND      = 3
 
 class Puzzle(object):
 
+    # __________________________________________________________________
+    # Constructor
+
     def __init__(self, size=4):
         self.groups = []  # Each group is a list of points.
         self.size = size
@@ -35,11 +38,17 @@ class Puzzle(object):
         self.x_stride = 10
         self.y_stride = 5
 
+        # I am considering allowing self.cursor == None, which would indicate
+        # we're in a display-only mode. This might be interesting for simply
+        # viewing a puzzle (like `cat FILE`), or printing a puzzle.
         self.cursor = [0, 0]
 
         # The format here is (index, foreground, background).
-        curses.init_pair(GROUP_HIGHLIGHT, 246, 235)
+        curses.init_pair(GROUP_HIGHLIGHT, 246, 236)
         curses.init_pair(BACKGROUND, 7, 16)
+
+    # __________________________________________________________________
+    # Methods to modify the puzzle
 
     # I'm calling this "reset" rather than "set" because it involves potentially
     # throwing away quite a bit of data.
@@ -62,28 +71,6 @@ class Puzzle(object):
             self.split(a, b)
         else:
             self.join(a, b)
-
-    def find_all_paths(self, start, end, group, exclude=set()):
-        """ This returns a list of paths from `start` to `end` in `group`.
-            Each path is a list of points that begins with `start` and ends with
-            (wait for it) `end`.
-        """
-
-        if start == end:
-            return [[start]]
-
-        pt_set = frozenset(group)  # Support fast inclusion checks.
-        dirs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
-        paths = []
-        for dir_ in dirs:
-            next_ = tuple(start[i] + dir_[i] for i in [0, 1])
-            if next_ not in group or next_ in exclude:
-                continue
-            new_exclude = exclude | {start}
-            path_ends = self.find_all_paths(next_, end, group, new_exclude)
-            for path_end in path_ends:
-                paths.append([start] + path_end)
-        return paths
 
     def split(self, a, b):
         """ This splits the group containing a and the group containing b. In
@@ -149,6 +136,34 @@ class Puzzle(object):
         # XXX
         dbgpr('At end of join, self.groups =', self.groups)
 
+    def set_clue_at_cursor(self, clue):
+        pass  # XXX TODO
+
+    # __________________________________________________________________
+    # Utility methods
+
+    def find_all_paths(self, start, end, group, exclude=set()):
+        """ This returns a list of paths from `start` to `end` in `group`.
+            Each path is a list of points that begins with `start` and ends with
+            (wait for it) `end`.
+        """
+
+        if start == end:
+            return [[start]]
+
+        pt_set = frozenset(group)  # Support fast inclusion checks.
+        dirs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        paths = []
+        for dir_ in dirs:
+            next_ = tuple(start[i] + dir_[i] for i in [0, 1])
+            if next_ not in group or next_ in exclude:
+                continue
+            new_exclude = exclude | {start}
+            path_ends = self.find_all_paths(next_, end, group, new_exclude)
+            for path_end in path_ends:
+                paths.append([start] + path_end)
+        return paths
+
     def are_grouped(self, a, b):
         a_group = [(i, g) for i, g in enumerate(self.groups) if a in g]
         b_group = [(i, g) for i, g in enumerate(self.groups) if b in g]
@@ -156,13 +171,27 @@ class Puzzle(object):
             return False
         return a_group[0][0] == b_group[0][0]
 
-    def get_clue_subline(self):
-        """ Return (y, x1, x2) for the clue text area of the cursor's current
+    def jump_to_clue_subline(self, stdscr):
+        """ Jump the cursor to the clue-holding square for the current group,
+            and return (y, x1, x2) for the clue text area of the cursor's (clue)
             square. The valid x range is [x1, x2), excluding x2. """
 
         # This only makes sense if this puzzle has been drawn (otherwise we
         # won't have x0, y0 coordinates).
         assert 'x0' in self.__dict__
+
+        # Find the first square of the current group, in English reading order.
+        # We'll jump the cursor to that square.
+        groups = [g for g in self.groups if tuple(self.cursor) in g]
+        if len(groups) > 0:
+            group = groups[0]
+            first_sq = sorted(
+                    group,
+                    key=lambda pt: self.size * pt[1] + pt[0]
+            )[0]
+            self.cursor = list(first_sq)
+            self.draw(stdscr, self.x0, self.y0)
+            stdscr.refresh()
 
         y  = self.y0 + self.cursor[1] * self.y_stride + 1
         x1 = self.x0 + self.cursor[0] * self.x_stride + 1
@@ -170,8 +199,23 @@ class Puzzle(object):
 
         return (y, x1, x2)
 
-    def set_clue_at_cursor(self, clue):
-        pass  # XXX TODO
+    # __________________________________________________________________
+    # Display and visual editing methods
+
+    def edit_clue(self, stdscr):
+        """ Let the user modify the clue for the group containing the
+            cursor.
+        """
+        assert self.cursor
+
+        # A `subline` is (y, x1, x2).
+        subline = self.jump_to_clue_subline(stdscr)
+        clue = drawing.edit_subline(stdscr, subline)
+        if clue is None:
+            return
+        # TODO: Check if clue strings are valid. If not, we can highlight
+        #       them in red so users can correct them.
+        self.set_clue_at_cursor(clue)
 
     def draw(self, stdscr, x0, y0):
 
@@ -236,6 +280,9 @@ class Puzzle(object):
                         attr = curses.color_pair(GROUP_HIGHLIGHT)
 
                 stdscr.addstr(y, x, ch, attr)
+
+    # __________________________________________________________________
+    # Methods that work with files
 
     def write(self, filename):
         """ Save this puzzle to `filename`. """

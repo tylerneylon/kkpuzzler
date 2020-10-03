@@ -130,11 +130,15 @@ def get_line(stdscr, prompt=''):
     stdscr.refresh()
     return None if value is None else value.rstrip()
 
-def edit_subline(stdscr, subline):
+def edit_subline(stdscr, subline, do_clear=True):
     """ Let the user edit the text within the given subline (y, x1, x2).
         A subline has the x range [x1, x2).
     """
     y, x1, x2 = subline
+
+    if do_clear:
+        stdscr.addstr(y, x1, ' ' * (x2 - x1))
+
     subwin = stdscr.subwin(
             1,        # nlines
             x2 - x1,  # ncols
