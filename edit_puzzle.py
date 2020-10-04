@@ -126,7 +126,11 @@ def main(stdscr_):
 
         elif key == 'c':              #### c    = set the Clue
 
-            puzzle.edit_clue(stdscr)
+            final_char = puzzle.edit_clue(stdscr)
+            if final_char:
+                for i in range(2):
+                    puzzle.cursor[i] += movements[final_char][i]
+                    puzzle.cursor[i] = puzzle.cursor[i] % puzzle.size
 
         elif key == 'f':              #### f    = Figure it out! (full soln)
 

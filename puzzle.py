@@ -255,18 +255,21 @@ class Puzzle(object):
 
     def edit_clue(self, stdscr):
         """ Let the user modify the clue for the group containing the
-            cursor.
+            cursor. This lets the user finish editing by hitting one of the hjkl
+            keys, in which case that key (as a one-char str) is returned;
+            otherwise None is returned.
         """
         assert self.cursor
 
         # A `subline` is (y, x1, x2).
         subline = self.jump_to_clue_subline(stdscr)
-        clue = drawing.edit_subline(stdscr, subline)
+        clue, final_char = drawing.edit_subline(stdscr, subline)
         if clue is None:
             return
         # TODO: Check if clue strings are valid. If not, we can highlight
         #       them in red so users can correct them.
         self.set_clue_at_cursor(clue)
+        return final_char
 
     def draw(self, stdscr, x0, y0):
 

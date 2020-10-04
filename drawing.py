@@ -91,8 +91,10 @@ def add_char(stdscr, y, x, dirs, name_char=False):
 # Modify Textbox behavior to work better with backspaces.
 class Textbox(curses.textpad.Textbox):
 
-    def edit(self, validate=None):
+    def edit(self, validate=None, extra_end_chars=''):
         self.did_escape = False
+        self.extra_end_chars = extra_end_chars
+        self.final_char = None
         return super().edit(validate)
 
     # This is the main modification. We handle character 127 as delete, and
@@ -105,6 +107,11 @@ class Textbox(curses.textpad.Textbox):
             ch = curses.KEY_BACKSPACE
         if ch == 27:
             self.did_escape = True
+            return False
+        if chr(ch) in self.extra_end_chars:
+            # This instance variable is meant to be (optionally) publicly
+            # examined so the caller can see how the box was exited.
+            self.final_char = chr(ch)
             return False
         return super().do_command(ch)
 
@@ -149,12 +156,15 @@ def edit_subline(stdscr, subline, do_clear=True):
     textbox = Textbox(subwin)
     prev_state = curses.curs_set(1)
     # Give the user control for a bit. What could go wrong?
-    value = textbox.edit()
+    value = textbox.edit(extra_end_chars='hjkl')
     curses.curs_set(prev_state)
     # XXX
     # stdscr.addstr(h - 1, 0, ' ' * (w - 1))
     # stdscr.refresh()
-    return None if value is None else value.rstrip()
+    if value is None:
+        return None, None
+    else:
+        return value.rstrip(), textbox.final_char
 
 def show_status(stdscr, status_str):
     """ Erase the old bottom of the screen and replace it with status_str. """
