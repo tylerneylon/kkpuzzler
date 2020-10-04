@@ -118,6 +118,7 @@ def get_line(stdscr, prompt=''):
         synchronous operation.
     """
     h, w = stdscr.getmaxyx()
+    stdscr.addstr(h - 1, 0, ' ' * (w - 1))
     stdscr.addstr(h - 1, 0, prompt)
     stdscr.refresh()
     subwin = stdscr.subwin(h - 1, len(prompt))
