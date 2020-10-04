@@ -131,11 +131,13 @@ def main(stdscr_):
                 final_char = puzzle.edit_clue(stdscr)
                 if final_char is None:
                     break
-                pt = puzzle.get_next_clueless_point(movements[final_char])
+                dir_ = 'reading' if final_char == 'n' else movements[final_char]
+                pt = puzzle.get_next_clueless_point(dir_)
                 if pt is None:
-                    for i in range(2):
-                        puzzle.cursor[i] += movements[final_char][i]
-                        puzzle.cursor[i] = puzzle.cursor[i] % puzzle.size
+                    if final_char in 'hjkl':
+                        for i in range(2):
+                            puzzle.cursor[i] += movements[final_char][i]
+                            puzzle.cursor[i] = puzzle.cursor[i] % puzzle.size
                     break
                 else:
                     puzzle.cursor = list(pt)

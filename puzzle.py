@@ -180,7 +180,16 @@ class Puzzle(object):
             return None
         else:
             assert dir_ == 'reading'
-            pass  # XXX
+            new_pt = self.cursor[:]
+            while True:
+                new_pt[0] += 1
+                if new_pt[0] == self.size:
+                    new_pt = [0, (new_pt[1] + 1) % self.size]
+                if new_pt == self.cursor:
+                    return None  # We've searched the whole puzzle.
+                group = self.get_group_at_point(new_pt)
+                if group[0] == '':
+                    return tuple(new_pt)
 
     def get_group_at_point(self, pt):
         """ If `pt` is in a group, this returns that group (as a list).
@@ -286,7 +295,11 @@ class Puzzle(object):
 
         # A `subline` is (y, x1, x2).
         subline = self.jump_to_clue_subline(stdscr)
-        clue, final_char = drawing.edit_subline(stdscr, subline)
+        clue, final_char = drawing.edit_subline(
+                stdscr,
+                subline,
+                extra_end_chars='hjkln'
+        )
         if clue is None:
             return
         # TODO: Check if clue strings are valid. If not, we can highlight

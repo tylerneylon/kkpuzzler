@@ -138,7 +138,7 @@ def get_line(stdscr, prompt=''):
     stdscr.refresh()
     return None if value is None else value.rstrip()
 
-def edit_subline(stdscr, subline, do_clear=True):
+def edit_subline(stdscr, subline, do_clear=True, extra_end_chars=''):
     """ Let the user edit the text within the given subline (y, x1, x2).
         A subline has the x range [x1, x2).
     """
@@ -156,7 +156,7 @@ def edit_subline(stdscr, subline, do_clear=True):
     textbox = Textbox(subwin)
     prev_state = curses.curs_set(1)
     # Give the user control for a bit. What could go wrong?
-    value = textbox.edit(extra_end_chars='hjkl')
+    value = textbox.edit(extra_end_chars=extra_end_chars)
     curses.curs_set(prev_state)
     # XXX
     # stdscr.addstr(h - 1, 0, ' ' * (w - 1))
