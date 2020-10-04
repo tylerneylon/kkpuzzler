@@ -20,6 +20,7 @@ import drawing
 # These are curses color indexes.
 GROUP_HIGHLIGHT = 2
 BACKGROUND      = 3
+CLUE            = 4
 
 
 # ______________________________________________________________________
@@ -48,6 +49,7 @@ class Puzzle(object):
         # The format here is (index, foreground, background).
         curses.init_pair(GROUP_HIGHLIGHT, 246, 234)
         curses.init_pair(BACKGROUND, 7, 16)
+        curses.init_pair(CLUE, 241, 16)
 
     # __________________________________________________________________
     # Methods to modify the puzzle
@@ -386,7 +388,7 @@ class Puzzle(object):
             x = x0 + clue_pt[0] * self.x_stride + 1
             y = y0 + clue_pt[1] * self.y_stride + 1
             clue_str = '%%-%ds' % (self.x_stride - 1) % group[0]
-            stdscr.addstr(y, x, clue_str, curses.color_pair(0))
+            stdscr.addstr(y, x, clue_str, curses.color_pair(CLUE))
 
         # Render the solution if we have one.
         if self.solution is None:
