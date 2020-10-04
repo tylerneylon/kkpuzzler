@@ -9,5 +9,5 @@
 
 - [x] In clue-editing: hjkl goes to the next clueless group in that dir.
 - [x] In clue-editing: n goes to the next clueless group in reading order.
-- [ ] If someone executes ":w" alone, it saves to the current filename.
+- [x] If someone executes ":w" alone, it saves to the current filename.
 - [ ] Print out the time it took to solve a puzzle.

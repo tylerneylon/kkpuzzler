@@ -70,6 +70,7 @@ def main(stdscr_):
     puzzle.cursor = [0, 0]
 
     # Check to see if we should load a puzzle.
+    filename = None
     if len(sys.argv) > 1:
         filename = sys.argv[1]
         puzzle.read(filename)
@@ -109,7 +110,11 @@ def main(stdscr_):
         elif key == 'w':              #### w    = Write (save) to a file
 
             line = drawing.get_line(stdscr, ':w ')
-            filename = f'{line}.kk'
+            if line != '':
+                filename = f'{line}.kk'
+            elif filename is None:
+                show_status('Not saved: No filename given or known.')
+                continue
             puzzle.write(filename)
             show_status(f'Puzzle written to {filename}')
 
