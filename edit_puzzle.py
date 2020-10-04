@@ -15,6 +15,7 @@
 
 import curses
 import sys
+import time
 
 import dbg
 import drawing
@@ -149,11 +150,14 @@ def main(stdscr_):
 
         elif key == 'f':              #### f    = Figure it out! (full soln)
 
+            start_time = time.time()
             solns = solver.solve_puzzle(puzzle)
+            time_to_solve = time.time() - start_time
             if len(solns) > 0:
                 # XXX
                 dbg.print('Adding the solution:', solns[0])
                 puzzle.add_solution(solns[0])
+                show_status(f'Found a solution in {time_to_solve:.2f}s.')
 
 if __name__ == '__main__':
     curses.wrapper(main)
