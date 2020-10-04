@@ -5,6 +5,7 @@
 
 - [ ] Saving to something with .kk doesn't add a new .kk extension.
 - [ ] Be able to resize the terminal.
+- [ ] Make it visually more globally obvious when we're in clue-editing mode.
 
 - [ ] In clue-editing: hjkl goes to the next clueless group in that dir.
 - [ ] In clue-editing: n goes to the next clueless group in reading order.

@@ -159,6 +159,29 @@ class Puzzle(object):
     # __________________________________________________________________
     # Utility methods
 
+    def get_next_clueless_point(self, dir_):
+        """ This searches for the next group, starting from, and excluding,
+            self.cursor, and looking in the direction `dir_`. `dir_` can either
+            be a tuple such as (1, 0), or the string 'reading', indicating that
+            we're looking for the next group in reading order with wrap-around.
+
+            If no clueless group exists in the direction given, None is
+            returned. Otherwise, the appropriate point within that group is
+            returned.
+        """
+
+        if type(dir_) is tuple:
+            new_pt = [self.cursor[i] + dir_[i] for i in range(2)]
+            while 0 <= new_pt[0] < self.size and 0 <= new_pt[1] < self.size:
+                group = self.get_group_at_point(new_pt)
+                if group[0] == '':
+                    return tuple(new_pt)
+                new_pt = [new_pt[i] + dir_[i] for i in range(2)]
+            return None
+        else:
+            assert dir_ == 'reading'
+            pass  # XXX
+
     def get_group_at_point(self, pt):
         """ If `pt` is in a group, this returns that group (as a list).
             Otherwise, this creates a new group with the contents
