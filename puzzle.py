@@ -37,7 +37,7 @@ class Puzzle(object):
         self.size = size
         self.solution = None
 
-        self.x_stride = 10
+        self.x_stride = 11
         self.y_stride = 5
 
         # I am considering allowing self.cursor == None, which would indicate
@@ -46,7 +46,7 @@ class Puzzle(object):
         self.cursor = [0, 0]
 
         # The format here is (index, foreground, background).
-        curses.init_pair(GROUP_HIGHLIGHT, 246, 236)
+        curses.init_pair(GROUP_HIGHLIGHT, 246, 234)
         curses.init_pair(BACKGROUND, 7, 16)
 
     # __________________________________________________________________
@@ -220,6 +220,12 @@ class Puzzle(object):
                 key=lambda pt: self.size * pt[1] + pt[0]
         )[0]
 
+    def get_top_y_value(self, group):
+        """ Return the top (numerically smallest) y value found in the group.
+        """
+        clue_pt = self.get_clue_point(group)
+        return clue_pt[1]
+
     def jump_to_clue_subline(self, stdscr):
         """ Jump the cursor to the clue-holding square for the current group,
             and return (y, x1, x2) for the clue text area of the cursor's (clue)
@@ -267,10 +273,11 @@ class Puzzle(object):
         # TODO Call this only once.
         stdscr.bkgd(' ', curses.color_pair(BACKGROUND))
 
-        current_group = []
+        current_group = ['', tuple(self.cursor)]
         for group in self.groups:
             if tuple(self.cursor) in group:
                 current_group = group
+        current_group_top_y = self.get_top_y_value(current_group)
 
         self.x0 = x0
         self.y0 = y0
@@ -321,10 +328,14 @@ class Puzzle(object):
                 # Check to see if this is a cursor character.
                 if self.cursor and x1 == x2 and y1 == y2:
                     if tuple(self.cursor) == (x1, y1):
-                        ch = '.'
+                        if (y - y0) % self.y_stride != 1:
+                            ch = '.'
                         attr = curses.color_pair(GROUP_HIGHLIGHT)
                     if (x1, y1) in current_group:
                         attr = curses.color_pair(GROUP_HIGHLIGHT)
+                        # if y1 == current_group_top_y:
+                        if (y - y0) % self.y_stride == 1:
+                            attr = curses.color_pair(0)
 
                 stdscr.addstr(y, x, ch, attr)
 
