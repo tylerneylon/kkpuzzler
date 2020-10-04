@@ -7,7 +7,7 @@
 - [ ] Be able to resize the terminal.
 - [ ] Make it visually more globally obvious when we're in clue-editing mode.
 
-- [ ] In clue-editing: hjkl goes to the next clueless group in that dir.
-- [ ] In clue-editing: n goes to the next clueless group in reading order.
+- [x] In clue-editing: hjkl goes to the next clueless group in that dir.
+- [x] In clue-editing: n goes to the next clueless group in reading order.
 - [ ] If someone executes ":w" alone, it saves to the current filename.
 - [ ] Print out the time it took to solve a puzzle.
