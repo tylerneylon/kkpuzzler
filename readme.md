@@ -11,6 +11,8 @@
   + [ ] Give a message if no solutions.
   + [ ] Give a solution and a message if multiple solutions.
 - [ ] For the auto-chosen filename, ensure it won't erase an existing file.
+- [ ] Make the status msg fade to dark gray over time. Thus a repeat of the same
+      message (eg "saved to FILENAME") can still be understood as happening.
 
 - [x] In clue-editing: hjkl goes to the next clueless group in that dir.
 - [x] In clue-editing: n goes to the next clueless group in reading order.
