@@ -79,11 +79,15 @@ def main(stdscr_):
     x0, y0 = refresh_screen(puzzle)
 
     movements = {'h': (-1, 0), 'j': (0, 1), 'k': (0, -1), 'l': (1, 0)}
+    leader_state = 0
+
+    is_in_leader_state = False
 
     while True:
         puzzle.draw(stdscr, x0, y0)
         stdscr.refresh()
         key = stdscr.getkey()
+        leader_state = max(leader_state - 1, 0)
 
         if key == 'q' or key == 'Q':  #### qQ   = Quit
 
@@ -110,12 +114,19 @@ def main(stdscr_):
 
         elif key == 'w':              #### w    = Write (save) to a file
 
-            line = drawing.get_line(stdscr, ':w ')
-            if line != '':
-                filename = f'{line}.kk'
-            elif filename is None:
-                show_status('Not saved: No filename given or known.')
-                continue
+            if leader_state:
+                # Auto-choose a filename.
+                date_str = time.strftime('%Y_%m_%d')
+                n = puzzle.size
+                filename = f'puzzle_{n}x{n}_{date_str}.kk'
+            else:
+                line = drawing.get_line(stdscr, ':w ')
+                if line != '':
+                    filename = f'{line}.kk'
+                elif filename is None:
+                    show_status('Not saved: No filename given or known.')
+                    continue
+
             puzzle.write(filename)
             show_status(f'Puzzle written to {filename}')
 
@@ -158,6 +169,10 @@ def main(stdscr_):
                 dbg.print('Adding the solution:', solns[0])
                 puzzle.add_solution(solns[0])
                 show_status(f'Found a solution in {time_to_solve:.2f}s.')
+
+        elif key == '\\':             #### \    = Leader.
+
+            leader_state = 2
 
 if __name__ == '__main__':
     curses.wrapper(main)

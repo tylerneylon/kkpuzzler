@@ -10,6 +10,7 @@
   + [ ] Complain if we have an incomplete puzzle (not all clues given).
   + [ ] Give a message if no solutions.
   + [ ] Give a solution and a message if multiple solutions.
+- [ ] For the auto-chosen filename, ensure it won't erase an existing file.
 
 - [x] In clue-editing: hjkl goes to the next clueless group in that dir.
 - [x] In clue-editing: n goes to the next clueless group in reading order.
