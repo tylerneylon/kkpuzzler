@@ -304,6 +304,17 @@ class Puzzle(object):
         )
         if clue is None:
             return
+        # TODO: Pull the official op characters out into constants that are
+        #       shared across files. Currently this one and solver.py.
+        op_mapping = {
+                '+': '+',
+                '-': '−',
+                'x': '×',
+                '*': '×',
+                '/': '÷'
+        }
+        if clue[-1] in op_mapping:
+            clue = clue[:-1] + op_mapping[clue[-1]]
         # TODO: Check if clue strings are valid. If not, we can highlight
         #       them in red so users can correct them.
         self.set_clue_at_cursor(clue)
