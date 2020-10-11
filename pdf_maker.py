@@ -40,9 +40,8 @@ def make_pdf(puzzle, filename):
     # pdf.set_doc_option('core_fonts_encoding', 'utf-8')
     pdf.add_page()
 
-    grid_size = 6
     lane_width = 10
-    max_pt = grid_size * lane_width
+    max_pt = puzzle.size * lane_width
 
     # Calculate where we belong on the page to be centered.
     puzzle_width = max_pt
@@ -57,7 +56,7 @@ def make_pdf(puzzle, filename):
     light_color = 170
 
     pdf.set_fill_color(light_color)
-    for i in range(1, grid_size):
+    for i in range(1, puzzle.size):
         c = i * lane_width
         add_line(pdf, (0, c), (max_pt, c), thin_width, offset=(x0, y0))
         add_line(pdf, (c, 0), (c, max_pt), thin_width, offset=(x0, y0))
@@ -87,7 +86,7 @@ def make_pdf(puzzle, filename):
                 )
 
     # XXX
-    for i in [0, grid_size]:
+    for i in [0, puzzle.size]:
         c = i * lane_width
         add_line(pdf, (0, c), (max_pt, c), thick_width, offset=(x0, y0))
         add_line(pdf, (c, 0), (c, max_pt), thick_width, offset=(x0, y0))
