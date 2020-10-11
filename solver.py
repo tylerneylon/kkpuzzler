@@ -124,18 +124,18 @@ def solve_puzzle(puzzle):
             clue_op  = clue[-1]
             clue_num = int(clue[:-1])
 
-            if clue_op == '−':
+            if clue_op == puzzle.sub_char:
                 assert n_pts == 2
                 if len(nums) == 2 and abs(nums[0] - nums[1]) != clue_num:
                     return False
 
-            if clue_op == '÷':
+            if clue_op == puzzle.div_char:
                 assert n_pts == 2
                 nums = sorted(nums)
                 if len(nums) == 2 and abs(nums[1] / nums[0]) != clue_num:
                     return False
 
-            if clue_op == '+':
+            if clue_op == puzzle.add_char:
                 sum_ = reduce(add, nums)
                 if len(nums) == n_pts and sum_ != clue_num:
                     # dbg.print(f'  No b/c clue {clue} != full sum {sum_}')
@@ -144,7 +144,7 @@ def solve_puzzle(puzzle):
                     # dbg.print(f'  No b/c clue {clue} <= partial sum {sum_}')
                     return False
 
-            if clue_op == '×':
+            if clue_op == puzzle.mul_char:
                 product = reduce(mul, nums)
                 if len(nums) == n_pts and product != clue_num:
                     return False

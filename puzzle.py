@@ -41,6 +41,18 @@ class Puzzle(object):
         self.x_stride = 11
         self.y_stride = 5
 
+        # These are convenient to have around.
+        self.add_char = '+'
+        self.sub_char = '–'
+        self.mul_char = '×'
+        self.div_char = '÷'
+        self.op_chars = ''.join([
+            self.add_char,
+            self.sub_char,
+            self.mul_char,
+            self.div_char
+        ])
+
         # I am considering allowing self.cursor == None, which would indicate
         # we're in a display-only mode. This might be interesting for simply
         # viewing a puzzle (like `cat FILE`), or printing a puzzle.
@@ -307,11 +319,11 @@ class Puzzle(object):
         # TODO: Pull the official op characters out into constants that are
         #       shared across files. Currently this one and solver.py.
         op_mapping = {
-                '+': '+',
-                '-': '−',
-                'x': '×',
-                '*': '×',
-                '/': '÷'
+                '+': self.add_char,
+                '-': self.sub_char,
+                'x': self.mul_char,
+                '*': self.mul_char,
+                '/': self.div_char
         }
         if clue[-1] in op_mapping:
             clue = clue[:-1] + op_mapping[clue[-1]]

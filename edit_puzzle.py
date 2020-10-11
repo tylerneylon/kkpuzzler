@@ -13,13 +13,18 @@
 # ______________________________________________________________________
 # Imports
 
+# Standard library imports.
 import curses
+import os
+import shlex
 import sys
 import time
 
+# Local imports.
 import dbg
 import drawing
 import solver
+from pdf_maker import make_pdf
 from puzzle import Puzzle
 
 
@@ -52,6 +57,19 @@ def refresh_screen(puzzle):
     y0 = (h - puzzle_size_y) // 2
 
     return x0, y0
+
+def get_default_filename(puzzle):
+    date_str = time.strftime('%Y_%m_%d')
+    n = puzzle.size
+    return f'puzzle_{n}x{n}_{date_str}.kk'
+
+def make_pdf_using_puzzle_filename(puzzle, puzzle_filename):
+    pdf_filename = puzzle_filename
+    if pdf_filename is None:
+        pdf_filename = get_default_filename(puzzle)
+    pdf_filename = pdf_filename.split('.', 1)[0] + '.pdf'
+    make_pdf(puzzle, pdf_filename)
+    return pdf_filename
 
 
 # ______________________________________________________________________
@@ -114,18 +132,13 @@ def main(stdscr_):
 
         elif key == 'w':              #### w    = Write (save) to a file
 
-            if leader_state:
-                # Auto-choose a filename.
-                date_str = time.strftime('%Y_%m_%d')
-                n = puzzle.size
-                filename = f'puzzle_{n}x{n}_{date_str}.kk'
-            else:
+            if not leader_state:
                 line = drawing.get_line(stdscr, ':w ')
                 if line != '':
-                    filename = f'{line}.kk'
-                elif filename is None:
-                    show_status('Not saved: No filename given or known.')
-                    continue
+                    filename = line + ('' if line.endswith('.kk') else '.kk')
+
+            if filename is None:
+                filename = get_default_filename(puzzle)
 
             puzzle.write(filename)
             show_status(f'Puzzle written to {filename}')
@@ -169,6 +182,17 @@ def main(stdscr_):
                 dbg.print('Adding the solution:', solns[0])
                 puzzle.add_solution(solns[0])
                 show_status(f'Found a solution in {time_to_solve:.2f}s.')
+
+        elif key == 'p':              #### p    = make a Pdf of this puzzle.
+
+            pdf_filename = make_pdf_using_puzzle_filename(puzzle, filename)
+            show_status(f'pdf written to {pdf_filename}')
+
+        elif key == 'o':              #### o    = Open a pdf of this puzzle.
+
+            pdf_filename = make_pdf_using_puzzle_filename(puzzle, filename)
+            show_status(f'pdf written to {pdf_filename}')
+            os.system(f'open {shlex.quote(pdf_filename)}')
 
         elif key == '\\':             #### \    = Leader.
 
