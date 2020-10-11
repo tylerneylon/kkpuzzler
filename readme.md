@@ -13,11 +13,17 @@
 - [ ] For the auto-chosen filename, ensure it won't erase an existing file.
 - [ ] Make the status msg fade to dark gray over time. Thus a repeat of the same
       message (eg "saved to FILENAME") can still be understood as happening.
+- [ ] Right now typing 'w' and then hitting esc can cause a crash.
 
 - [x] In clue-editing: hjkl goes to the next clueless group in that dir.
 - [x] In clue-editing: n goes to the next clueless group in reading order.
 - [x] If someone executes ":w" alone, it saves to the current filename.
 - [ ] Print out the time it took to solve a puzzle.
+
+Eventually:
+- [ ] Think about how to avoid losing data by closing a puzzle before saving.
+      We could either save automatically all the time, or present a warning if
+      they haven't saved yet. I'm leaning toward auto-saving.
 
 I'm thinking about a puzzle-editing mode that has different controls from
 puzzle-solving mode. The bad part about that is that it's a more complex mental
