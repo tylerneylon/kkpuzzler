@@ -51,10 +51,10 @@ def make_pdf(puzzle, filename):
 
     # x0, y0 = 50, 50
 
-    thick_width = 1
+    thick_width = 0.7
     thin_width  = 0.1
 
-    light_color = 150
+    light_color = 170
 
     pdf.set_fill_color(light_color)
     for i in range(1, grid_size):
@@ -95,7 +95,7 @@ def make_pdf(puzzle, filename):
     # TODO: How could I programmatically determine the offsets for the text?
     #       I'm not even sure if it's possible.
 
-    pdf.set_text_color(light_color)
+    # pdf.set_text_color(light_color)
     # pdf.set_font('Helvetica', 'B', 7)
     pdf.set_font('NotoSans', 'B', 7)
 
@@ -110,10 +110,12 @@ def make_pdf(puzzle, filename):
             prefix, suffix = clue[:-1], clue[-1]
         else:
             prefix, suffix = clue, ''
+        pdf.set_font('NotoSans', 'B', 7)
         w = pdf.get_string_width(prefix)
         pdf.cell(w + 0.01, 4.12, prefix)
         if suffix:
-            h = 3.69 if suffix == puzzle.sub_char else 4.12
+            pdf.set_font('NotoSans', 'B', 9)
+            h = 3.7 if suffix == puzzle.sub_char else 4.2
             pdf.write(h, suffix)
 
             # pdf.set_font('NotoSans', '', 7)
