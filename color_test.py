@@ -14,7 +14,7 @@ def main(stdscr):
 
     for i in range(0, curses.COLORS):
         curses.init_pair(i + 1, -1, i)
-    for i in range(0, 255):
+    for i in range(0, 256):
         stdscr.addstr(f'{i} ', curses.color_pair(i + 1))
 
     stdscr.getch()
