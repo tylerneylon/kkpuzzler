@@ -112,7 +112,7 @@ def solve_puzzle(puzzle):
             n_pts = len(group) - 1
 
             # Special-case handling of given squares.
-            if group[0][-1] not in '+−×÷':
+            if group[0][-1] not in puzzle.op_chars:
                 assert n_pts == 1
                 if nums[0] != int(group[0]):
                     # dbg.print(f'  No b/c given clue {group[0]} != num {nums[0]}')
