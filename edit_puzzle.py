@@ -23,6 +23,7 @@ import time
 # Local imports.
 import dbg
 import drawing
+import event
 import solver
 from pdf_maker import make_pdf
 from puzzle import Puzzle
@@ -37,9 +38,27 @@ stdscr = None
 # ______________________________________________________________________
 # Functions
 
+status_tick = None
+status_str  = ''
+
+def fade_out_status(num_ticks):
+    global stdscr, status_tick, status_str
+    ticks_passed = num_ticks - status_tick
+    fade_time_in_ticks = 20
+    if ticks_passed > fade_time_in_ticks:
+        return
+    color = 254 - ticks_passed
+    # dbg.print(f'Drawing status in color {color}.')
+    drawing.show_status(stdscr, status_str, color=color)
+    stdscr.refresh()
+
 def show_status(status):
-    global stdscr
+    global stdscr, status_tick, status_str
     drawing.show_status(stdscr, status)
+    status_str  = status
+    status_tick = event.num_ticks
+    if fade_out_status not in event.callbacks:
+        event.callbacks.append(fade_out_status)
 
 def refresh_screen(puzzle):
     """ Erase the screen and recalculate the upper-left corner of a puzzle.
@@ -73,32 +92,6 @@ def make_pdf_using_puzzle_filename(puzzle, puzzle_filename):
 
 
 # ______________________________________________________________________
-# Event cycle globals and functions
-
-start_time = time.time()
-num_ticks  = 0
-callbacks = []
-
-def check_for_clock_tick():
-    """ This function is called at least once every 0.1s.
-        It ensures that all registered callbacks are called approximately
-        every 0.2s.
-        Since this function can be called _more often_ than every 0.1s, it
-        regulates the rate further for the sake of the callbacks.
-
-        To add a callback function, just append it to the `callbacks` global.
-    """
-
-    global start_time, num_ticks, callbacks
-
-    goal_num_ticks = (time.time() - start_time) / 0.2
-    while num_ticks < goal_num_ticks:
-        num_ticks += 1
-        for cb in callbacks:
-            cb(num_ticks)
-
-
-# ______________________________________________________________________
 # Main
 
 def main(stdscr_):
@@ -106,10 +99,11 @@ def main(stdscr_):
     # I use a global for `stdscr` to simplify sharing it with other functions
     # (like show_status()) within this file.
     global stdscr
-    stdscr = stdscr_
+    stdscr = event.Window(stdscr_)
 
-    # XXX Make the delay shorter.
-    curses.halfdelay(10)    # Add a timeout to getkey().
+    dbg.print(stdscr.__class__)
+
+    curses.halfdelay(1)     # Add a timeout to getkey().
     curses.curs_set(False)  # Hide the text cursor.
     stdscr.clear()
 
@@ -136,12 +130,7 @@ def main(stdscr_):
         leader_state = max(leader_state - 1, 0)
 
         # TODO Be able to respond meaningfully to ctrl-C.
-        key = ''
-        while key == '':
-            try:
-                key = stdscr.getkey()
-            except curses.error as e:  # We may have a timeout.
-                check_for_clock_tick()
+        key = stdscr.getkey()
 
         if key == 'q' or key == 'Q':  #### qQ   = Quit
 

@@ -166,15 +166,28 @@ def edit_subline(stdscr, subline, do_clear=True, extra_end_chars=''):
     else:
         return value.rstrip(), textbox.final_char
 
-def show_status(stdscr, status_str):
+def show_status(stdscr, status_str, color=None):
     """ Erase the old bottom of the screen and replace it with status_str. """
     h, w = stdscr.getmaxyx()
-    stdscr.addstr(h - 1, 0, status_str + (' ' * (w - len(status_str) - 1)))
+    if color:
+        curses.init_pair(1, color, 16)  # pair_number, fg, bg.
+        stdscr.addstr(
+                h - 1,
+                0,
+                status_str + (' ' * (w - len(status_str) - 1)),
+                curses.color_pair(1)
+        )
+    else:
+        stdscr.addstr(
+                h - 1,
+                0,
+                status_str + (' ' * (w - len(status_str) - 1))
+        )
     stdscr.refresh()
 
 # TODO: Consider deleting this. I'm using it to help debug things.
 def highlight_subline(stdscr, subline):
-    curses.init_pair(1, 0, 63)
+    curses.init_pair(1, 0, 63)  # pair_number, fg, bg.
     y, x1, x2 = subline
     stdscr.addstr(y, x1, ' ' * (x2 - x1), curses.color_pair(1))
     dbg.print(f'Wrote a line at (y, x): {y}, {x1} with width {x2 - x1}.')

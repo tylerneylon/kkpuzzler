@@ -63,6 +63,8 @@ class Puzzle(object):
         curses.init_pair(BACKGROUND, 7, 16)
         curses.init_pair(CLUE, 241, 16)
 
+        self.has_draw_been_called = False
+
     # __________________________________________________________________
     # Methods to modify the puzzle
 
@@ -159,9 +161,6 @@ class Puzzle(object):
         else:
             dbgpr('Clause 3')
             self.groups.append(['', a, b])
-
-        # XXX
-        dbgpr('At end of join, self.groups =', self.groups)
 
     def set_clue_at_cursor(self, clue):
         group = self.get_group_at_cursor()
@@ -334,8 +333,9 @@ class Puzzle(object):
 
     def draw(self, stdscr, x0, y0):
 
-        # TODO Call this only once.
-        stdscr.bkgd(' ', curses.color_pair(BACKGROUND))
+        if not self.has_draw_been_called:
+          stdscr.bkgd(' ', curses.color_pair(BACKGROUND))
+          self.has_draw_been_called = True
 
         current_group = ['', tuple(self.cursor)]
         for group in self.groups:
