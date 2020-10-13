@@ -56,13 +56,13 @@ def get_add_partitions(hi, clue_num, num_sq, max_repeat):
 def get_mul_partitions(hi, clue_num, num_sq, max_repeat):
     return get_addmul_partitions(hi, clue_num, num_sq, max_repeat, mul)
 
-def get_sub_partitions(hi, clue_num):
+def get_sub_partitions(hi, clue_num, num_sq=None, max_repeat=None):
     return [
             [a, a + clue_num]
             for a in range(1, hi - clue_num + 1)
     ]
 
-def get_div_partitions(hi, clue_num):
+def get_div_partitions(hi, clue_num, num_sq=None, max_repeat=None):
     return [
             [a, a * clue_num]
             for a in range(1, hi // clue_num + 1)

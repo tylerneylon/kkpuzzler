@@ -24,6 +24,7 @@ import time
 import dbg
 import drawing
 import event
+import partition
 import solver
 from pdf_maker import make_pdf
 from puzzle import Puzzle
@@ -90,6 +91,46 @@ def make_pdf_using_puzzle_filename(puzzle, puzzle_filename):
     make_pdf(puzzle, pdf_filename)
     return pdf_filename
 
+def update_availale_partitions(stdscr, puzzle):
+    """ Evaluate which values can possibly fill the current group in the puzzle
+        based on the clue and the shape of the group. Display these values for
+        the user if we're in the correct mode; as of this writing, such modes
+        are not yet implemented.
+
+        In some cases, value values cannot be found. For example, if there is no
+        cursor, or if there is no clue.
+    """
+    group = puzzle.get_group_at_cursor()
+
+    part_fn_map = {
+            puzzle.add_char: partition.get_add_partitions,
+            puzzle.sub_char: partition.get_sub_partitions,
+            puzzle.mul_char: partition.get_mul_partitions,
+            puzzle.div_char: partition.get_div_partitions
+    }
+
+    clue = group[0]
+
+    if clue == '':
+        return
+
+    op_char = clue[-1]
+    if op_char in puzzle.op_chars:
+        num_sq = len(group) - 1
+        group_w = len({pt[0] for pt in group[1:]})
+        group_h = len({pt[1] for pt in group[1:]})
+        max_repeat = min(group_w, group_h)
+        parts = part_fn_map[op_char](
+                puzzle.size,
+                int(clue[:-1]),
+                num_sq,
+                max_repeat
+        )
+    else:
+        parts = [[int(clue)]]
+
+    dbg.print(parts)
+
 
 # ______________________________________________________________________
 # Main
@@ -141,6 +182,8 @@ def main(stdscr_):
             for i in range(2):
                 puzzle.cursor[i] += movements[key][i]
                 puzzle.cursor[i] = puzzle.cursor[i] % puzzle.size
+
+            update_availale_partitions(stdscr, puzzle)
 
         elif key in 'HJKL':           #### HJKL = group editing
 
