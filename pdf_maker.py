@@ -105,6 +105,8 @@ def make_pdf(puzzle, filename):
                 x0 + clue_pt[0] * lane_width,
                 y0 + clue_pt[1] * lane_width
         )
+        if len(clue) == 0:
+            continue
         if clue[-1] in puzzle.op_chars:
             prefix, suffix = clue[:-1], clue[-1]
         else:

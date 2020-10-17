@@ -251,6 +251,10 @@ def main(stdscr_):
                 puzzle.add_solution(solns[0])
                 show_status(f'Found a solution in {time_to_solve:.2f}s.')
 
+        elif key == 'e':              #### e    = run Experimental solver.
+
+            solver.print_human_friendly_soln(puzzle)
+
         elif key == 'p':              #### p    = make a Pdf of this puzzle.
 
             pdf_filename = make_pdf_using_puzzle_filename(puzzle, filename)

@@ -12,6 +12,7 @@ from functools import reduce
 from operator import add, mul
 
 import dbg
+import partition
 from alg_b import algorithm_b
 
 
@@ -125,3 +126,257 @@ def solve_puzzle(puzzle):
         solns.append(soln[:])
 
     return solns
+
+# ______________________________________________________________________
+# Work-in-progress
+#
+# Everything below here is scratch code while I figure out how to set up
+# a rules-based system to solve a puzzle in a human-understandable way.
+
+# grp_options[grp_idx] = [(grp_set1, why1), (grp_set2, why2), ...]
+# If a value is empty, this means we haven't evaluated it yet.
+# Groups are indexed by their position in puzzle.groups.
+grp_options = defaultdict(list)
+
+# sqr_options[sqr_idx] = set_of_possible_values = (set, why).
+# If a set is empty, this means we haven't evaluated it yet.
+# Squares are indexed by (x, y), 0-indexed, starting at the upper-left
+# corner. I decided to start at the upper-left corner for a couple reasons:
+# * It's what's already used internally, based on how screen coordinates
+#   typically work (for terminals).
+# * It's English reading-order, which I think many people will find more
+#   intuitive as I plan to express it as, eg, square C3, similar to a
+#   spreadsheet.
+sqr_options = defaultdict(list)
+
+# This is a list of deductions of the form (str, why).
+soln_hist = []
+
+# In each of the above, a `why` object has the form:
+#     [RULE_NAME, hist_idx1, hist_idx2, ...]
+# where RULE_NAME is a string and the subsequent history indexes point
+# into soln_hist to tell us which previous deductions were used.
+
+# Our soln_hist has two parts to it: a prefix that we consider to be "good
+# enough so far," and a suffix which we may prune as we proceed.
+# The "good enough so far" prefix is exactly soln_hist[:good_soln].
+good_soln = 0
+
+def elt(singleton):
+    """ Return the value of the single element in the set `singleton`. """
+    assert type(singleton) == set
+    assert len(singleton) == 1
+    return next(iter(singleton))
+
+def get_line_limited_info(puzzle, coord, val):
+    """ This looks at the line given by pt[coord] == val.
+        This returns knowns_by_sqr, caught_in_line.
+        `knowns_by_sqr` is a list of items of these three possible values:
+        * int  This denotes a square with an exactly-known value.
+        * '?'  This denotes a square with unknown value.
+        * set  This denotes a square with a known set of possible values.
+               This is the intersection given by grp_options and sqr_options.
+        * list This denotes an all-in-line group. It will have the form
+               [grp_len, grp_options].
+        `caught_in_line` is the set of numbers such that we either know exactly
+        which square in this line has that value, or we know exactly which group
+        in this line has that value.
+    """
+
+    global grp_options, sqr_options, soln_hist, good_soln
+
+    # XXX and below in this function
+    dbg.print(f'get_line_limited_info(puzzle, {coord}, {val})')
+
+    lst_pt = [0, 0]
+    lst_pt[coord] = val
+
+    knowns_by_sqr = []
+    caught_in_line = set()
+
+    c2 = 1 - coord
+    for v2 in range(puzzle.size):
+
+        lst_pt[c2] = v2
+        pt = tuple(lst_pt)
+
+        # Have we solved this square?
+
+        if len(sqr_options[pt]) > 0 and len(sqr_options[pt][0]) == 1:
+            num = elt(sqr_options[pt][0])
+            knowns_by_sqr.append(num)
+            caught_in_line.add(num)
+            continue
+
+        # Is this part of an all-in-line group?
+
+        sqr_choices = set(range(1, puzzle.size + 1))
+
+        grp = puzzle.get_group_at_point(pt)
+        if all(p[coord] == val for p in grp[1:]):
+            i = puzzle.groups.index(grp)
+            if len(grp_options[i]) == 1:
+                nums = grp_options[i][0][0]
+                knowns_by_sqr.append([len(grp) - 1, nums])
+                caught_in_line |= nums
+                continue
+            elif len(grp_options[i]) > 1:
+                sqr_choices = set.union(*[
+                    option[0]
+                    for option in grp_options[i]
+                ])
+
+        # Check to see how much info we gain from sqr_options.
+
+        if len(sqr_options[pt]) > 0 and len(sqr_options[pt][0]) > 1:
+            sqr_choices &= sqr_options[pt][0]
+
+            if len(sqr_choices) < puzzle.size:
+                knowns_by_sqr.append(sqr_choices)
+                continue
+
+        knowns_by_sqr.append('?')
+
+    dbg.print(f'  will return {knowns_by_sqr}, {caught_in_line}')
+
+    return knowns_by_sqr, caught_in_line
+
+def check_for_line_elims(puzzle):
+    global grp_options, sqr_options, soln_hist, good_soln
+
+    did_make_progress = False
+
+    for val in range(puzzle.size):
+        for coord in [0, 1]:
+            knowns_by_sqr, caught_in_line = get_line_limited_info(
+                    puzzle,
+                    coord,
+                    val
+            )
+            if len(caught_in_line) != puzzle.size - 1:
+                continue
+
+            # At this point, we have found a new square value.
+            assert knowns_by_sqr.count('?') == 1
+            i = knowns_by_sqr.index('?')
+            pt = (val, i) if coord == 0 else (i, val)
+            sqr_val = elt(set(range(1, puzzle.size + 1)) - caught_in_line)
+            why = ('line_elim', [])  # TODO: Account for history here.
+            sqr_options[pt] = ({sqr_val}, why)
+            line_name = 'col' if coord == 0 else 'row'
+            step = f'{pt_name(pt)}={sqr_val} by {line_name} elimination.'
+            soln_hist.append(step)
+            dbg.print(step)
+            did_make_progress = True
+
+    # XXX
+    dbg.print(f'check_for_line_elims() will return {did_make_progress}')
+    return did_make_progress
+
+def check_for_single_grp_option(puzzle):
+    global grp_options, sqr_options, soln_hist, good_soln
+
+    part_fn_map = {
+            puzzle.add_char: partition.get_add_partitions,
+            puzzle.sub_char: partition.get_sub_partitions,
+            puzzle.mul_char: partition.get_mul_partitions,
+            puzzle.div_char: partition.get_div_partitions
+    }
+
+    did_make_progress = False
+
+    for i, grp in enumerate(puzzle.groups):
+
+        clue = grp[0]
+
+        if clue == '':
+            dbg.print('WARNING: Soln req on a puzzle w an empty clue!!')
+            return
+
+
+        op_char = clue[-1]
+        if op_char not in puzzle.op_chars:
+            continue
+        num_sq = len(grp) - 1
+        group_w = len({pt[0] for pt in grp[1:]})
+        group_h = len({pt[1] for pt in grp[1:]})
+        max_repeat = min(group_w, group_h)
+        parts = part_fn_map[op_char](
+                puzzle.size,
+                int(clue[:-1]),
+                num_sq,
+                max_repeat
+        )
+        if not (len(parts) == 1 and len(grp_options[i]) != 1):
+            continue
+
+        # XXX
+        k = len(grp_options[i])
+        dbg.print(f'I think I found smth new b/c len(grp_options[i]) = {k}')
+        dbg.print(f'Specifically, grp_options[i] = {grp_options[i]}')
+
+        numset = set(parts[0])
+        why = ('single_grp_opt', [])
+        grp_options[i] = [(numset, why)]
+        clue_pt = puzzle.get_clue_point(grp)
+        step = f'Group @ {pt_name(clue_pt)}({grp[0]}) is {numset}'
+        soln_hist.append(step)
+        dbg.print(step)
+        did_make_progress = True
+
+    dbg.print(f'check_for_single_grp_option() will return {did_make_progress}')
+    return did_make_progress
+
+def pt_name(pt):
+    xname = chr(ord('a') + pt[0])
+    return f'{xname}{pt[1] + 1}'
+
+# XXX
+# This next function is a work-in-progress as I figure out how to set up a
+# rules-based puzzle-solving system.
+def print_human_friendly_soln(puzzle):
+    global grp_options, sqr_options, soln_hist, good_soln
+
+    grp_options = defaultdict(list)
+    sqr_options = defaultdict(list)
+    soln_hist = []
+    good_soln = 0
+
+    # We can record that a square has a known value by giving it a singleton set
+    # in sqr_options.
+
+    # 1. Find given squares.
+
+    for x in range(puzzle.size):
+        for y in range(puzzle.size):
+            pt = (x, y)
+            grp = puzzle.get_group_at_point(pt)
+            if len(grp) == 2:
+                val = int(grp[0])
+                why = ('given', [])
+                sqr_options[pt] = ({val}, why)
+                soln_hist.append(f'Given: {pt_name(pt)}={val}')
+                good_soln += 1
+                dbg.print(soln_hist[-1])
+
+    dbg.print('sqr_options:')
+    dbg.print(sqr_options)
+    dbg.print('grp_options:')
+    dbg.print(grp_options)
+
+    # XXX
+    i = 1
+
+    did_make_progress = True
+    while did_make_progress:
+
+        dbg.print(f'\n\nStart of iteration {i}.\n')
+
+        did_make_progress = False
+        did_make_progress |= check_for_line_elims(puzzle)
+        did_make_progress |= check_for_single_grp_option(puzzle)
+
+        dmp = did_make_progress
+        dbg.print(f'Ending iteration {i}; did_make_progress = {dmp}.')
+
+        i += 1
