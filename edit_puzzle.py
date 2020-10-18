@@ -61,6 +61,12 @@ def show_status(status):
     if fade_out_status not in event.callbacks:
         event.callbacks.append(fade_out_status)
 
+def clear_status():
+    global stdscr
+    if fade_out_status in event.callbacks:
+        event.callbacks.remove(fade_out_status)
+    drawing.show_status(stdscr, '')
+
 def refresh_screen(puzzle):
     """ Erase the screen and recalculate the upper-left corner of a puzzle.
         This is useful when either the screen or the puzzle is resized, or
@@ -200,8 +206,12 @@ def main(stdscr_):
         elif key == 'w':              #### w    = Write (save) to a file
 
             if prev_leader != '\\':
+                clear_status()
                 line = drawing.get_line(stdscr, ':w ')
-                if line != '':
+                if line is None:
+                    show_status(f'Write canceled')
+                    continue
+                if line:
                     filename = line + ('' if line.endswith('.kk') else '.kk')
 
             if filename is None:
@@ -212,7 +222,11 @@ def main(stdscr_):
 
         elif key == 's':              #### s    = set the puzzle Size
 
+            clear_status()
             line = drawing.get_line(stdscr, ':s ')
+            if line is None:
+                show_status(f'Size change canceled')
+                continue
             try:
                 new_size = int(line)
             except:
