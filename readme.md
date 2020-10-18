@@ -3,7 +3,7 @@
 * I have a note in the Notes app called "KenKen methods of deduction and ideas"
   which is currently the central place for my thoughts on this repo.
 
-- [ ] Saving to something with .kk doesn't add a new .kk extension.
+- [x] Saving to something with .kk doesn't add a new .kk extension.
 - [ ] Be able to resize the terminal.
 - [ ] Make it visually more globally obvious when we're in clue-editing mode.
 - [ ] When asking for a solution handle edge cases:
@@ -11,19 +11,21 @@
   + [ ] Give a message if no solutions.
   + [ ] Give a solution and a message if multiple solutions.
 - [ ] For the auto-chosen filename, ensure it won't erase an existing file.
-- [ ] Make the status msg fade to dark gray over time. Thus a repeat of the same
+- [x] Make the status msg fade to dark gray over time. Thus a repeat of the same
       message (eg "saved to FILENAME") can still be understood as happening.
-- [ ] Right now typing 'w' and then hitting esc can cause a crash.
+- [x] Right now typing 'w' and then hitting esc can cause a crash.
 
 - [x] In clue-editing: hjkl goes to the next clueless group in that dir.
 - [x] In clue-editing: n goes to the next clueless group in reading order.
 - [x] If someone executes ":w" alone, it saves to the current filename.
-- [ ] Print out the time it took to solve a puzzle.
+- [x] Print out the time it took to solve a puzzle.
 
 Eventually:
 - [ ] Think about how to avoid losing data by closing a puzzle before saving.
       We could either save automatically all the time, or present a warning if
       they haven't saved yet. I'm leaning toward auto-saving.
+- [ ] Update the save system to avoid overwriting files (unless we're sure the
+      save is an udpate to the version on disk).
 
 I'm thinking about a puzzle-editing mode that has different controls from
 puzzle-solving mode. The bad part about that is that it's a more complex mental
