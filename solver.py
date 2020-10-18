@@ -327,6 +327,78 @@ def check_for_single_grp_option(puzzle):
     dbg.print(f'check_for_single_grp_option() will return {did_make_progress}')
     return did_make_progress
 
+def check_for_grp_completion(puzzle):
+    global grp_options, sqr_options, soln_hist, good_soln
+
+    part_fn_map = {
+            puzzle.add_char: partition.get_add_partitions,
+            puzzle.sub_char: partition.get_sub_partitions,
+            puzzle.mul_char: partition.get_mul_partitions,
+            puzzle.div_char: partition.get_div_partitions
+    }
+
+    did_make_progress = False
+
+    for i, grp in enumerate(puzzle.groups):
+
+        grp_size = len(grp) - 1  # -1 for the clue
+
+        # TODO: Needed?
+        if grp_size < 1:
+            continue
+
+        # Check to see if we know all squares but one in this group.
+        known_in_grp = set()
+        unknown_pt = None
+        for pt in grp[1:]:
+            sqr_set = sqr_options[pt][0] if sqr_options[pt] else set()
+            if len(sqr_set) == 1:
+                known_in_grp.add(elt(sqr_set))
+            else:
+                unknown_pt = pt
+
+        if len(known_in_grp) != grp_size - 1:
+            continue
+
+        # The square might yet be unknown. Eg, the clue is 1- and the val is 3.
+        # Get the possible partitions and use those.
+
+        clue = grp[0]
+
+        op_char = clue[-1]
+        if op_char not in puzzle.op_chars:
+            continue
+        num_sq = len(grp) - 1
+        group_w = len({pt[0] for pt in grp[1:]})
+        group_h = len({pt[1] for pt in grp[1:]})
+        max_repeat = min(group_w, group_h)
+        parts = part_fn_map[op_char](
+                puzzle.size,
+                int(clue[:-1]),
+                num_sq,
+                max_repeat
+        )
+
+        compatible_parts = [
+                part
+                for part in parts
+                if known_in_grp < set(part)
+        ]
+
+        assert len(compatible_parts) > 0
+        if len(compatible_parts) != 1:
+            continue  # This is the case where we don't know the sqr yet.
+
+        sqr_val = elt(set(compatible_parts[0]) - known_in_grp)
+        why = ('grp_completion', [])  # TODO: Account for history.
+        sqr_options[unknown_pt] = ({sqr_val}, why)
+        step = f'{pt_name(unknown_pt)}={sqr_val} by group completion.'
+        soln_hist.append(step)
+        dbg.print(step)
+        did_make_progress = True
+
+    return did_make_progress
+
 def pt_name(pt):
     xname = chr(ord('a') + pt[0])
     return f'{xname}{pt[1] + 1}'
@@ -375,6 +447,10 @@ def print_human_friendly_soln(puzzle):
         did_make_progress = False
         did_make_progress |= check_for_line_elims(puzzle)
         did_make_progress |= check_for_single_grp_option(puzzle)
+        did_make_progress |= check_for_grp_completion(puzzle)
+
+        # TODO HERE: Next up, in a line, look for the only place
+        #            a certain number could possibly go.
 
         dmp = did_make_progress
         dbg.print(f'Ending iteration {i}; did_make_progress = {dmp}.')
