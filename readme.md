@@ -26,6 +26,7 @@ Eventually:
       they haven't saved yet. I'm leaning toward auto-saving.
 - [ ] Update the save system to avoid overwriting files (unless we're sure the
       save is an udpate to the version on disk).
+- [ ] In clue editing, accept a/s/m/d keys for clue completion.
 
 I'm thinking about a puzzle-editing mode that has different controls from
 puzzle-solving mode. The bad part about that is that it's a more complex mental
