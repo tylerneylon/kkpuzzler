@@ -213,8 +213,8 @@ def get_line_limited_info(puzzle, coord, val):
         sqr_choices = set(range(1, puzzle.size + 1))
 
         grp = puzzle.get_group_at_point(pt)
+        i = puzzle.groups.index(grp)
         if all(p[coord] == val for p in grp[1:]):
-            i = puzzle.groups.index(grp)
             if len(grp_options[i]) == 1:
                 nums = grp_options[i][0][0]
                 knowns_by_sqr.append([len(grp) - 1, nums])
@@ -225,17 +225,25 @@ def get_line_limited_info(puzzle, coord, val):
                     option[0]
                     for option in grp_options[i]
                 ])
+        else:
+
+            # We may be able to narrow down sqr_choices by starting with all the
+            # group options (even if it is not all in this line).
+
+            sqr_choices = set.union(*[
+                option[0]
+                for option in grp_options[i]
+            ])
 
         # Check to see how much info we gain from sqr_options.
 
         if len(sqr_options[pt]) > 0 and len(sqr_options[pt][0]) > 1:
             sqr_choices &= sqr_options[pt][0]
 
-            if len(sqr_choices) < puzzle.size:
-                knowns_by_sqr.append(sqr_choices)
-                continue
-
-        knowns_by_sqr.append('?')
+        if len(sqr_choices) < puzzle.size:
+            knowns_by_sqr.append(sqr_choices)
+        else:
+            knowns_by_sqr.append('?')
 
     dbg.print(f'  will return {knowns_by_sqr}, {caught_in_line}')
 
@@ -257,8 +265,20 @@ def check_for_line_elims(puzzle):
                 continue
 
             # At this point, we have found a new square value.
-            assert knowns_by_sqr.count('?') == 1
-            i = knowns_by_sqr.index('?')
+
+            set_idx = [
+                    i
+                    for i, sqr in enumerate(knowns_by_sqr)
+                    if type(sqr) is set
+            ]
+
+            if knowns_by_sqr.count('?') == 1:
+                i = knowns_by_sqr.index('?')
+            elif len(set_idx) == 1:
+                i = set_idx[0]
+            else:
+                assert False  # Expected only one unknown square.
+
             pt = (val, i) if coord == 0 else (i, val)
             sqr_val = elt(set(range(1, puzzle.size + 1)) - caught_in_line)
             why = ('line_elim', [])  # TODO: Account for history here.
@@ -399,6 +419,52 @@ def check_for_grp_completion(puzzle):
 
     return did_make_progress
 
+def check_for_one_place_left(puzzle):
+
+    global grp_options, sqr_options, soln_hist, good_soln
+
+    did_make_progress = False
+
+    for val in range(puzzle.size):
+        for coord in [0, 1]:
+            knowns_by_sqr, caught_in_line = get_line_limited_info(
+                    puzzle,
+                    coord,
+                    val
+            )
+
+            # For each num, check to see how many spaces it could live in.
+            for num in range(1, puzzle.size + 1):
+                num_homes = 0
+                home_val = -1
+                for i, sqr in enumerate(knowns_by_sqr):
+                    if sqr == '?':
+                        num_homes += 1
+                        home_val = i
+                    elif type(sqr) is list:  # An in-line group.
+                        if num in sqr[1]:
+                            num_homes += 1
+                            home_val = i
+                    elif type(sqr) is set:  # A partial-info square.
+                        if num in sqr:
+                            num_homes += 1
+                            home_val = i
+                    if num_homes > 1:
+                        break
+                if num_homes == 1:
+                    pt = (val, home_val) if coord == 0 else (home_val, val)
+                    why = ('one_place_left', [])  # TODO: Account for history.
+                    sqr_options[pt] = ({num}, why)
+                    line_name = 'col' if coord == 0 else 'row'
+                    step = f'''
+                        {pt_name(pt)}={num} by only-place-left in {line_name}.
+                    '''.strip()
+                    soln_hist.append(step)
+                    dbg.print(step)
+                    did_make_progress = True
+
+    return did_make_progress
+
 def pt_name(pt):
     xname = chr(ord('a') + pt[0])
     return f'{xname}{pt[1] + 1}'
@@ -486,6 +552,7 @@ def print_human_friendly_soln(puzzle):
         #       I believe it's made obsolete by step 2 above.
         did_make_progress |= check_for_single_grp_option(puzzle)
         did_make_progress |= check_for_grp_completion(puzzle)
+        did_make_progress |= check_for_one_place_left(puzzle)
 
         # TODO HERE: Next up, in a line, look for the only place
         #            a certain number could possibly go.
