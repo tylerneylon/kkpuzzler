@@ -431,6 +431,42 @@ def print_human_friendly_soln(puzzle):
                 good_soln += 1
                 dbg.print(soln_hist[-1])
 
+    # 2. Set up initial grp_options.
+
+    part_fn_map = {
+            puzzle.add_char: partition.get_add_partitions,
+            puzzle.sub_char: partition.get_sub_partitions,
+            puzzle.mul_char: partition.get_mul_partitions,
+            puzzle.div_char: partition.get_div_partitions
+    }
+
+    for i, grp in enumerate(puzzle.groups):
+
+        clue = grp[0]
+
+        if clue == '':
+            dbg.print('WARNING: Soln req on a puzzle w an empty clue!!')
+            # TODO: Ensure we don't crash on a bad puzzle.
+
+        op_char = clue[-1]
+        if op_char not in puzzle.op_chars:
+            continue
+        num_sq = len(grp) - 1
+        group_w = len({pt[0] for pt in grp[1:]})
+        group_h = len({pt[1] for pt in grp[1:]})
+        max_repeat = min(group_w, group_h)
+        parts = part_fn_map[op_char](
+                puzzle.size,
+                int(clue[:-1]),
+                num_sq,
+                max_repeat
+        )
+
+        grp_options[i] = [
+                (set(part), 'listing all group options')
+                for part in parts
+        ]
+
     dbg.print('sqr_options:')
     dbg.print(sqr_options)
     dbg.print('grp_options:')
@@ -446,6 +482,8 @@ def print_human_friendly_soln(puzzle):
 
         did_make_progress = False
         did_make_progress |= check_for_line_elims(puzzle)
+        # TODO: Drop check_for_single_grp_option().
+        #       I believe it's made obsolete by step 2 above.
         did_make_progress |= check_for_single_grp_option(puzzle)
         did_make_progress |= check_for_grp_completion(puzzle)
 
