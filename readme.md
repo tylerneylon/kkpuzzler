@@ -27,6 +27,8 @@ Eventually:
 - [ ] Update the save system to avoid overwriting files (unless we're sure the
       save is an udpate to the version on disk).
 - [ ] In clue editing, accept a/s/m/d keys for clue completion.
+- [ ] Don't insta-crash if the terminal isn't big enough.
+      Maybe just show the biggest we can show.
 
 I'm thinking about a puzzle-editing mode that has different controls from
 puzzle-solving mode. The bad part about that is that it's a more complex mental
