@@ -29,6 +29,7 @@ Eventually:
 - [ ] In clue editing, accept a/s/m/d keys for clue completion.
 - [ ] Don't insta-crash if the terminal isn't big enough.
       Maybe just show the biggest we can show.
+- [ ] Don't crash if I hit 'n' on an empty clue in clue-entering mode.
 
 I'm thinking about a puzzle-editing mode that has different controls from
 puzzle-solving mode. The bad part about that is that it's a more complex mental
