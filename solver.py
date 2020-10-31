@@ -162,6 +162,10 @@ soln_hist = []
 # The "good enough so far" prefix is exactly soln_hist[:good_soln].
 good_soln = 0
 
+# This is a list of puzzle.size^2 values that begin as all '?' strings, and that
+# we'll work to turn into numeric values with the puzzle's solution.
+full_soln = []
+
 def elt(singleton):
     """ Return the value of the single element in the set `singleton`. """
     assert type(singleton) == set
@@ -183,7 +187,7 @@ def get_line_limited_info(puzzle, coord, val):
         in this line has that value.
     """
 
-    global grp_options, sqr_options, soln_hist, good_soln
+    global grp_options, sqr_options, soln_hist, good_soln, full_soln
 
     # XXX and below in this function
     dbg.print(f'get_line_limited_info(puzzle, {coord}, {val})')
@@ -250,7 +254,7 @@ def get_line_limited_info(puzzle, coord, val):
     return knowns_by_sqr, caught_in_line
 
 def check_for_line_elims(puzzle):
-    global grp_options, sqr_options, soln_hist, good_soln
+    global grp_options, sqr_options, soln_hist, good_soln, full_soln
 
     did_make_progress = False
 
@@ -286,6 +290,7 @@ def check_for_line_elims(puzzle):
             line_name = 'col' if coord == 0 else 'row'
             step = f'{pt_name(pt)}={sqr_val} by {line_name} elimination.'
             soln_hist.append(step)
+            full_soln[pt[0] + puzzle.size * pt[1]] = sqr_val
             dbg.print(step)
             did_make_progress = True
 
@@ -294,7 +299,7 @@ def check_for_line_elims(puzzle):
     return did_make_progress
 
 def check_for_single_grp_option(puzzle):
-    global grp_options, sqr_options, soln_hist, good_soln
+    global grp_options, sqr_options, soln_hist, good_soln, full_soln
 
     part_fn_map = {
             puzzle.add_char: partition.get_add_partitions,
@@ -348,7 +353,7 @@ def check_for_single_grp_option(puzzle):
     return did_make_progress
 
 def check_for_grp_completion(puzzle):
-    global grp_options, sqr_options, soln_hist, good_soln
+    global grp_options, sqr_options, soln_hist, good_soln, full_soln
 
     part_fn_map = {
             puzzle.add_char: partition.get_add_partitions,
@@ -414,6 +419,7 @@ def check_for_grp_completion(puzzle):
         sqr_options[unknown_pt] = ({sqr_val}, why)
         step = f'{pt_name(unknown_pt)}={sqr_val} by group completion.'
         soln_hist.append(step)
+        full_soln[unknown_pt[0] + puzzle.size * unknown_pt[1]] = sqr_val
         dbg.print(step)
         did_make_progress = True
 
@@ -421,7 +427,7 @@ def check_for_grp_completion(puzzle):
 
 def check_for_one_place_left(puzzle):
 
-    global grp_options, sqr_options, soln_hist, good_soln
+    global grp_options, sqr_options, soln_hist, good_soln, full_soln
 
     did_make_progress = False
 
@@ -460,6 +466,7 @@ def check_for_one_place_left(puzzle):
                         {pt_name(pt)}={num} by only-place-left in {line_name}.
                     '''.strip()
                     soln_hist.append(step)
+                    full_soln[pt[0] + puzzle.size * pt[1]] = num
                     dbg.print(step)
                     did_make_progress = True
 
@@ -473,12 +480,13 @@ def pt_name(pt):
 # This next function is a work-in-progress as I figure out how to set up a
 # rules-based puzzle-solving system.
 def print_human_friendly_soln(puzzle):
-    global grp_options, sqr_options, soln_hist, good_soln
+    global grp_options, sqr_options, soln_hist, good_soln, full_soln
 
     grp_options = defaultdict(list)
     sqr_options = defaultdict(list)
     soln_hist = []
     good_soln = 0
+    full_soln = ['?'] * (puzzle.size ** 2)
 
     # We can record that a square has a known value by giving it a singleton set
     # in sqr_options.
@@ -494,6 +502,7 @@ def print_human_friendly_soln(puzzle):
                 why = ('given', [])
                 sqr_options[pt] = ({val}, why)
                 soln_hist.append(f'Given: {pt_name(pt)}={val}')
+                full_soln[pt[0] + puzzle.size * pt[1]] = val
                 good_soln += 1
                 dbg.print(soln_hist[-1])
 
@@ -561,3 +570,5 @@ def print_human_friendly_soln(puzzle):
         dbg.print(f'Ending iteration {i}; did_make_progress = {dmp}.')
 
         i += 1
+
+    puzzle.add_solution(full_soln)

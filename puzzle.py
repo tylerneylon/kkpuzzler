@@ -417,6 +417,8 @@ class Puzzle(object):
         if self.solution is None:
             return
         for i, num in enumerate(self.solution):
+            if num == '?':
+                continue
             x = x0 + (i % self.size)  * self.x_stride + 5
             y = y0 + (i // self.size) * self.y_stride + 3
             stdscr.addstr(y, x, str(num), curses.color_pair(0))
