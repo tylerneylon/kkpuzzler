@@ -172,7 +172,7 @@ def elt(singleton):
     assert len(singleton) == 1
     return next(iter(singleton))
 
-def get_line_limited_info(puzzle, coord, val):
+def get_line_limited_info(puzzle, coord, val, excl_grp=None):
     """ This looks at the line given by pt[coord] == val.
         This returns knowns_by_sqr, caught_in_line.
         `knowns_by_sqr` is a list of items of these three possible values:
@@ -185,12 +185,18 @@ def get_line_limited_info(puzzle, coord, val):
         `caught_in_line` is the set of numbers such that we either know exactly
         which square in this line has that value, or we know exactly which group
         in this line has that value.
+
+        If a group (an element of puzzle.groups) is provided in excl_grp, then
+        we pretend that nothing is known about that given group.
     """
 
     global grp_options, sqr_options, soln_hist, good_soln, full_soln
 
-    # XXX and below in this function
-    dbg.print(f'get_line_limited_info(puzzle, {coord}, {val})')
+    # XXX
+    do_debug_print = False
+
+    if do_debug_print:
+        dbg.print(f'get_line_limited_info(puzzle, {coord}, {val})')
 
     lst_pt = [0, 0]
     lst_pt[coord] = val
@@ -203,6 +209,10 @@ def get_line_limited_info(puzzle, coord, val):
 
         lst_pt[c2] = v2
         pt = tuple(lst_pt)
+
+        # Are we skipping this square?
+        if excl_grp and pt in excl_grp:
+            continue
 
         # Have we solved this square?
 
@@ -249,7 +259,8 @@ def get_line_limited_info(puzzle, coord, val):
         else:
             knowns_by_sqr.append('?')
 
-    dbg.print(f'  will return {knowns_by_sqr}, {caught_in_line}')
+    if do_debug_print:
+        dbg.print(f'  will return {knowns_by_sqr}, {caught_in_line}')
 
     return knowns_by_sqr, caught_in_line
 
@@ -295,7 +306,7 @@ def check_for_line_elims(puzzle):
             did_make_progress = True
 
     # XXX
-    dbg.print(f'check_for_line_elims() will return {did_make_progress}')
+    # dbg.print(f'check_for_line_elims() will return {did_make_progress}')
     return did_make_progress
 
 def check_for_single_grp_option(puzzle):
@@ -311,6 +322,10 @@ def check_for_single_grp_option(puzzle):
     did_make_progress = False
 
     for i, grp in enumerate(puzzle.groups):
+
+        if len(grp_options[i]) == 1:
+            # We already have full group info here; skip.
+            continue
 
         clue = grp[0]
 
@@ -332,6 +347,47 @@ def check_for_single_grp_option(puzzle):
                 num_sq,
                 max_repeat
         )
+
+        # TODO Next: If a group is in a single line, check for compatibility
+        #            within that line.
+        if group_w == 1 or group_h == 1:
+
+            coord = 0 if group_w == 1 else 1
+            val = grp[1][coord]
+
+            knowns_by_sqr, caught_in_line = get_line_limited_info(
+                    puzzle,
+                    coord,
+                    val,
+                    excl_grp = grp
+            )
+
+            # XXX rest of this block
+            start_num_parts = len(parts)
+
+            parts = [
+                    part
+                    for part in parts
+                    if not (set(part) & caught_in_line)
+            ]
+
+            end_num_parts = len(parts)
+
+            # XXX
+            if end_num_parts == 0:
+                import ipdb
+                ipdb.set_trace()
+
+            if end_num_parts < start_num_parts:
+                dbg.print('*' * 70)
+                dbg.print(f'I have the reduced partition set (clue={clue}):')
+                dbg.print(parts)
+
+        # TODO: Intersect parts with the current group options.
+
+        # TODO Later: Try all layouts for each partition to see if it can
+        #             possibly be compatible with each line that it's in.
+
         if not (len(parts) == 1 and len(grp_options[i]) != 1):
             continue
 
@@ -349,7 +405,7 @@ def check_for_single_grp_option(puzzle):
         dbg.print(step)
         did_make_progress = True
 
-    dbg.print(f'check_for_single_grp_option() will return {did_make_progress}')
+    # dbg.print(f'check_for_single_grp_option() will return {did_make_progress}')
     return did_make_progress
 
 def check_for_grp_completion(puzzle):
@@ -443,6 +499,7 @@ def check_for_one_place_left(puzzle):
             for num in range(1, puzzle.size + 1):
                 num_homes = 0
                 home_val = -1
+                is_solved = False
                 for i, sqr in enumerate(knowns_by_sqr):
                     if sqr == '?':
                         num_homes += 1
@@ -455,8 +512,17 @@ def check_for_one_place_left(puzzle):
                         if num in sqr:
                             num_homes += 1
                             home_val = i
+                    elif type(sqr) is int:  # A solved square.
+                        if sqr == num:
+                            is_solved = True
+                            break
+                    else:
+                        # We should recognize every square value type.
+                        assert False
                     if num_homes > 1:
                         break
+                if is_solved:
+                    continue
                 if num_homes == 1:
                     pt = (val, home_val) if coord == 0 else (home_val, val)
                     why = ('one_place_left', [])  # TODO: Account for history.
@@ -553,7 +619,7 @@ def print_human_friendly_soln(puzzle):
     did_make_progress = True
     while did_make_progress:
 
-        dbg.print(f'\n\nStart of iteration {i}.\n')
+        dbg.print(f'\nStart of iteration {i}.\n')
 
         did_make_progress = False
         did_make_progress |= check_for_line_elims(puzzle)
