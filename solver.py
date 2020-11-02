@@ -172,6 +172,25 @@ def elt(singleton):
     assert len(singleton) == 1
     return next(iter(singleton))
 
+def is_multisubset(a, b):
+    """ Return True when list a is a subset of list b, considering both as
+        multisets.
+    """
+    c = b[:]
+    for a_elt in a:
+        if a_elt not in c:
+            return False
+        c.remove(a_elt)
+    return True
+
+def multiset_sub(big, small):
+    """ Return `big` - `small`, seen as multisets. """
+    assert is_multisubset(small, big)
+    delta = big[:]
+    for elt in small:
+        delta.remove(elt)
+    return delta
+
 def get_line_limited_info(puzzle, coord, val, excl_grp=None):
     """ This looks at the line given by pt[coord] == val.
         This returns knowns_by_sqr, caught_in_line.
@@ -409,6 +428,10 @@ def check_for_single_grp_option(puzzle):
     return did_make_progress
 
 def check_for_grp_completion(puzzle):
+    """ Look for groups where we've filled in all the squares except for one.
+        In some cases, we can uniquely determine the last square, but (for the -
+        or / operators), not always.
+    """
     global grp_options, sqr_options, soln_hist, good_soln, full_soln
 
     part_fn_map = {
@@ -429,12 +452,12 @@ def check_for_grp_completion(puzzle):
             continue
 
         # Check to see if we know all squares but one in this group.
-        known_in_grp = set()
+        known_in_grp = []
         unknown_pt = None
         for pt in grp[1:]:
             sqr_set = sqr_options[pt][0] if sqr_options[pt] else set()
             if len(sqr_set) == 1:
-                known_in_grp.add(elt(sqr_set))
+                known_in_grp.append(elt(sqr_set))
             else:
                 unknown_pt = pt
 
@@ -463,14 +486,16 @@ def check_for_grp_completion(puzzle):
         compatible_parts = [
                 part
                 for part in parts
-                if known_in_grp < set(part)
+                if is_multisubset(known_in_grp, part)
         ]
 
         assert len(compatible_parts) > 0
         if len(compatible_parts) != 1:
             continue  # This is the case where we don't know the sqr yet.
 
-        sqr_val = elt(set(compatible_parts[0]) - known_in_grp)
+        delta = multiset_sub(compatible_parts[0], known_in_grp)
+        assert len(delta) == 1
+        sqr_val = delta[0]
         why = ('grp_completion', [])  # TODO: Account for history.
         sqr_options[unknown_pt] = ({sqr_val}, why)
         step = f'{pt_name(unknown_pt)}={sqr_val} by group completion.'
