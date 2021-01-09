@@ -249,13 +249,13 @@ def get_line_limited_info(puzzle, coord, val, excl_grp=None):
         i = puzzle.groups.index(grp)
         if all(p[coord] == val for p in grp[1:]):
             if len(grp_options[i]) == 1:
-                nums = grp_options[i][0][0]
+                nums = set(grp_options[i][0][0])
                 knowns_by_sqr.append([len(grp) - 1, nums])
                 caught_in_line |= nums
                 continue
             elif len(grp_options[i]) > 1:
                 sqr_choices = set.union(*[
-                    option[0]
+                    set(option[0])
                     for option in grp_options[i]
                 ])
         else:
@@ -264,7 +264,7 @@ def get_line_limited_info(puzzle, coord, val, excl_grp=None):
             # group options (even if it is not all in this line).
 
             sqr_choices = set.union(*[
-                option[0]
+                set(option[0])
                 for option in grp_options[i]
             ])
 
@@ -629,14 +629,17 @@ def print_human_friendly_soln(puzzle):
         )
 
         grp_options[i] = [
-                (set(part), 'listing all group options')
+                (sorted(part), 'listing all group options')
                 for part in parts
         ]
 
     dbg.print('sqr_options:')
     dbg.print(sqr_options)
     dbg.print('grp_options:')
-    dbg.print(grp_options)
+    for i, grp in enumerate(puzzle.groups):
+        clue_pt = puzzle.get_clue_point(grp)
+        dbg.print(f'{grp[0]:4s} @ {clue_pt}: ', end='')
+        dbg.print(*[x[0] for x in grp_options[i]])
 
     # XXX
     i = 1
@@ -652,7 +655,11 @@ def print_human_friendly_soln(puzzle):
         #       I believe it's made obsolete by step 2 above.
         did_make_progress |= check_for_single_grp_option(puzzle)
         did_make_progress |= check_for_grp_completion(puzzle)
-        did_make_progress |= check_for_one_place_left(puzzle)
+
+        # I consider check-for-one-place-left to be a slightly trickier
+        # rule, so we only apply it when we get stuck with the simpler rules.
+        if not did_make_progress:
+            did_make_progress |= check_for_one_place_left(puzzle)
 
         # TODO HERE: Next up, in a line, look for the only place
         #            a certain number could possibly go.
