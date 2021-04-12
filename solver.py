@@ -328,6 +328,36 @@ def check_for_line_elims(puzzle):
     # dbg.print(f'check_for_line_elims() will return {did_make_progress}')
     return did_make_progress
 
+# XXX I'm not actually calling this function right now.
+#     Decide if I'll either finish-and-integrate this, or drop it.
+#     If I want to finish it, I'd like to have at least one test case
+#     where it's clearly useful.
+def check_and_remove_bad_grp_options(puzzle):
+    # XXX Do I actually use all of these?
+    global grp_options, sqr_options, soln_hist, good_soln, full_soln
+
+    did_make_progress = False  # XXX Do I actually need this?
+
+    # XXX temp; for reference
+    for val in range(puzzle.size):
+        for coord in [0, 1]:
+            knowns_by_sqr, caught_in_line = get_line_limited_info(
+                    puzzle,
+                    coord,
+                    val
+            )
+
+    # For each group, look for options that can't actually fit in.
+    for i, grp in enumerate(puzzle.groups):
+        options = grp_options[i]
+        for option in options:
+
+            # Enumerate over all possible ways of filling in this group.
+            pass
+
+    # XXX TODO
+    pass
+
 def check_for_single_grp_option(puzzle):
     global grp_options, sqr_options, soln_hist, good_soln, full_soln
 
