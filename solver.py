@@ -597,6 +597,13 @@ def pt_name(pt):
     xname = chr(ord('a') + pt[0])
     return f'{xname}{pt[1] + 1}'
 
+def pretty_print_grp_options(puzzle):
+    global grp_options
+    for i, grp in enumerate(puzzle.groups):
+        clue_pt = puzzle.get_clue_point(grp)
+        dbg.print(f'{grp[0]:4s} @ {clue_pt}: ', end='')
+        dbg.print(*[x[0] for x in grp_options[i]])
+
 # XXX
 # This next function is a work-in-progress as I figure out how to set up a
 # rules-based puzzle-solving system.
@@ -666,10 +673,7 @@ def print_human_friendly_soln(puzzle):
     dbg.print('sqr_options:')
     dbg.print(sqr_options)
     dbg.print('grp_options:')
-    for i, grp in enumerate(puzzle.groups):
-        clue_pt = puzzle.get_clue_point(grp)
-        dbg.print(f'{grp[0]:4s} @ {clue_pt}: ', end='')
-        dbg.print(*[x[0] for x in grp_options[i]])
+    pretty_print_grp_options(puzzle)
 
     # XXX
     i = 1
@@ -691,12 +695,43 @@ def print_human_friendly_soln(puzzle):
         if not did_make_progress:
             did_make_progress |= check_for_one_place_left(puzzle)
 
-        # TODO HERE: Next up, in a line, look for the only place
-        #            a certain number could possibly go.
+        # TODO HERE: Add a method which eliminates known-bad grp_options. It
+        #            will try out all possible placements of the options for
+        #            each group. Some groups will have all their possible
+        #            placements conflicting with the data we get from
+        #            get_line_limited_info() in terms of caught
+        #            (-in-other-group) numbers. We can eliminate those group
+        #            options. Test this on the file f.kk.
+        #
+        #            Along with this, it would be nice to start formally
+        #            deciding the difficulty rating of the various rules being
+        #            used. The idea here is to help understand the difficulty of
+        #            a puzzle by understanding the most-difficult rule that had
+        #            to be used. In some cases, I may feel as if different
+        #            applications of the same Python method may qualify as
+        #            different difficulty settings.
+
+        # TODO HERE(old): Next up, in a line, look for the only place
+        #                 a certain number could possibly go.
 
         dmp = did_make_progress
         dbg.print(f'Ending iteration {i}; did_make_progress = {dmp}.')
 
         i += 1
+
+    dbg.print('\n' + '_' * 30)
+
+    dbg.print('\nFinal row-based knowledge is:')
+    for val in range(puzzle.size):
+        knowns_by_sqr, caught_in_line = get_line_limited_info(
+                puzzle,
+                1,  # coord
+                val
+        )
+        prefix = f'Row {val}: {knowns_by_sqr}'
+        dbg.print(f'{prefix:60s} Caught values: {caught_in_line}')
+
+    dbg.print('\nFinal grp_options are as follows:')
+    pretty_print_grp_options(puzzle)
 
     puzzle.add_solution(full_soln)

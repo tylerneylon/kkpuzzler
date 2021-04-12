@@ -1,5 +1,9 @@
 (So far this is just a small note for myself.)
 
+* As of 203.2021, I have a "next up" list here:
+- [ ] Implment a method to eliminate known-bad grp_options in solver.py.
+      See `solver.py` for a bit more on that.
+
 * I have a note in the Notes app called "KenKen methods of deduction and ideas"
   which is currently the central place for my thoughts on this repo.
 
