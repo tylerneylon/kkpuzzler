@@ -4,6 +4,14 @@
 - [ ] Implment a method to eliminate known-bad grp_options in solver.py.
       See `solver.py` for a bit more on that.
 
+I sometimes store a _set_ in `grp_options`, but I don't think this is correct
+because we can have duplicates in a group. I think they should always be lists,
+sorted for standardization. They could alternatively be tuples:
+- [ ] Update `solver.py` to ensure that number lists in `grp_options` are lists
+      or tuples, never sets.
+
+___
+
 * I have a note in the Notes app called "KenKen methods of deduction and ideas"
   which is currently the central place for my thoughts on this repo.
 
