@@ -7,8 +7,11 @@
 I sometimes store a _set_ in `grp_options`, but I don't think this is correct
 because we can have duplicates in a group. I think they should always be lists,
 sorted for standardization. They could alternatively be tuples:
-- [ ] Update `solver.py` to ensure that number lists in `grp_options` are lists
+- [x] Update `solver.py` to ensure that number lists in `grp_options` are lists
       or tuples, never sets.
+
+- [ ] When using the experimental solver, print out axis labels so that I can
+      more easily understand the algebraic notation in the output (eg "a4=4").
 
 ___
 

@@ -379,17 +379,26 @@ def check_for_single_grp_option(puzzle):
         clue = grp[0]
 
         if clue == '':
-            dbg.print('WARNING: Soln req on a puzzle w an empty clue!!')
+            dbg.print('WARNING: Soln request on a puzzle w an empty clue!!')
             return
-
 
         op_char = clue[-1]
         if op_char not in puzzle.op_chars:
+            # This happens for single-box groups with given values.
             continue
         num_sq = len(grp) - 1
         group_w = len({pt[0] for pt in grp[1:]})
         group_h = len({pt[1] for pt in grp[1:]})
+        # Note that `max_repeat` does not fully capture the constraints of a
+        # shape. For example, a shape might support 3 copies of one number, but
+        # the next-most-frequent number may only be allowed 2 copies.
+        # It may be fun to explore the mathematical properties of carrying
+        # capacities of group shapes, as simple as it first appears.
         max_repeat = min(group_w, group_h)
+        # TODO: There is duplicate work here. What we're doing here should
+        #       already be done when we initially populate grp_options. And then
+        #       we ought to be using the list in grp_options rather than
+        #       re-calculating this here.
         parts = part_fn_map[op_char](
                 puzzle.size,
                 int(clue[:-1]),
@@ -397,8 +406,7 @@ def check_for_single_grp_option(puzzle):
                 max_repeat
         )
 
-        # TODO Next: If a group is in a single line, check for compatibility
-        #            within that line.
+        # For groups in a single line, check for compatibility within the line.
         if group_w == 1 or group_h == 1:
 
             coord = 0 if group_w == 1 else 1
@@ -408,7 +416,7 @@ def check_for_single_grp_option(puzzle):
                     puzzle,
                     coord,
                     val,
-                    excl_grp = grp
+                    excl_grp = grp  # So that caught_in_line excludes this grp.
             )
 
             # XXX rest of this block
@@ -423,7 +431,7 @@ def check_for_single_grp_option(puzzle):
             end_num_parts = len(parts)
 
             # XXX
-            if end_num_parts == 0:
+            if end_num_parts == 0:  # Can't happen if the puzzle is solvable.
                 import ipdb
                 ipdb.set_trace()
 
@@ -433,6 +441,8 @@ def check_for_single_grp_option(puzzle):
                 dbg.print(parts)
 
         # TODO: Intersect parts with the current group options.
+        #       (This won't be needed if we simply use grp_options as our source
+        #       for `parts`.)
 
         # TODO Later: Try all layouts for each partition to see if it can
         #             possibly be compatible with each line that it's in.
@@ -445,11 +455,11 @@ def check_for_single_grp_option(puzzle):
         dbg.print(f'I think I found smth new b/c len(grp_options[i]) = {k}')
         dbg.print(f'Specifically, grp_options[i] = {grp_options[i]}')
 
-        numset = set(parts[0])
+        numlist = parts[0]
         why = ('single_grp_opt', [])
-        grp_options[i] = [(numset, why)]
+        grp_options[i] = [(numlist, why)]
         clue_pt = puzzle.get_clue_point(grp)
-        step = f'Group @ {pt_name(clue_pt)}({grp[0]}) is {numset}'
+        step = f'Group @ {pt_name(clue_pt)}({grp[0]}) is {numlist}'
         soln_hist.append(step)
         dbg.print(step)
         did_make_progress = True
