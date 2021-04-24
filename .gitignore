@@ -4,5 +4,7 @@ got_line.txt
 tmp.txt
 keys.txt
 *.kk
+*.pdf
 dbg.out
 a
+!test_puzzles/*.kk
