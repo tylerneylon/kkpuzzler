@@ -25,6 +25,7 @@ import dbg
 import drawing
 import event
 import partition
+import sevendate
 import solver
 from pdf_maker import make_pdf
 from puzzle import Puzzle
@@ -85,7 +86,11 @@ def refresh_screen(puzzle):
     return x0, y0
 
 def get_default_filename(puzzle):
-    date_str = time.strftime('%Y_%m_%d')
+    date_str = sevendate.to_string(do_use_digital_format=True)
+    date_str = date_str.replace('-', '_')
+    if False:
+        # You can use this instead for Gregorian dates.
+        date_str = time.strftime('%Y_%m_%d')
     n = puzzle.size
     return f'puzzle_{n}x{n}_{date_str}.kk'
 
