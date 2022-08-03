@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ edit_puzzle.py
 
     This is a script to edit a KenKen puzzle.
