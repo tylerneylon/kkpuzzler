@@ -14,6 +14,7 @@ from operator import add, mul
 import dbg
 import partition
 from alg_b import algorithm_b
+from alg_P import algorithm_P
 
 
 # ______________________________________________________________________
@@ -339,24 +340,36 @@ def check_and_remove_bad_grp_options(puzzle):
     did_make_progress = False  # XXX Do I actually need this?
 
     # XXX temp; for reference
-    for val in range(puzzle.size):
-        for coord in [0, 1]:
-            knowns_by_sqr, caught_in_line = get_line_limited_info(
-                    puzzle,
-                    coord,
-                    val
-            )
+    if False:
+        for val in range(puzzle.size):
+            for coord in [0, 1]:
+                knowns_by_sqr, caught_in_line = get_line_limited_info(
+                        puzzle,
+                        coord,
+                        val
+                )
+
+    # TODO HERE:
+    # Question: How can I skip groups that we've already solved?
+    # For example, at my current point in f.kk, we ought to skip
+    # group 0 here.
 
     # For each group, look for options that can't actually fit in.
     for i, grp in enumerate(puzzle.groups):
+        dbg.print()
+        dbg.print(f'Thinking about group {i} with clue {grp[0]}.')
         options = grp_options[i]
         for option in options:
-
             # Enumerate over all possible ways of filling in this group.
-            pass
-
+            nums = option[0]
+            for sqrs in algorithm_P(grp[1:]):
+                # Visit the mapping sqrs[i] -> nums[i].
+                dbg.print('Placing', end='')
+                for sqr, n in zip(sqrs, nums):
+                    dbg.print(f' {n} @ {sqr}', end='')
+                dbg.print()
     # XXX TODO
-    pass
+    return False
 
 def check_for_single_grp_option(puzzle):
     global grp_options, sqr_options, soln_hist, good_soln, full_soln
@@ -699,13 +712,14 @@ def print_human_friendly_soln(puzzle):
         #       I believe it's made obsolete by step 2 above.
         did_make_progress |= check_for_single_grp_option(puzzle)
         did_make_progress |= check_for_grp_completion(puzzle)
+        did_make_progress |= check_and_remove_bad_grp_options(puzzle)
 
         # I consider check-for-one-place-left to be a slightly trickier
         # rule, so we only apply it when we get stuck with the simpler rules.
         if not did_make_progress:
             did_make_progress |= check_for_one_place_left(puzzle)
 
-        # TODO HERE: Add a method which eliminates known-bad grp_options. It
+        # TODO:      Add a method which eliminates known-bad grp_options. It
         #            will try out all possible placements of the options for
         #            each group. Some groups will have all their possible
         #            placements conflicting with the data we get from
@@ -720,9 +734,9 @@ def print_human_friendly_soln(puzzle):
         #            to be used. In some cases, I may feel as if different
         #            applications of the same Python method may qualify as
         #            different difficulty settings.
-
-        # TODO HERE(old): Next up, in a line, look for the only place
-        #                 a certain number could possibly go.
+        #
+        #            Added note: I am doing this work in the function
+        #            check_and_remove_bad_grp_options(), called above.
 
         dmp = did_make_progress
         dbg.print(f'Ending iteration {i}; did_make_progress = {dmp}.')

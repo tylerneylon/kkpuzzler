@@ -27,13 +27,14 @@ def add_line(pdf, pt1, pt2, width, offset=(0, 0)):
 # ______________________________________________________________________
 # Public functions
 
-def make_pdf(puzzle, filename):
+def make_pdf(puzzle, filename, do_include_solution=False):
 
     page_width = 215.9
     # page_width = fpdf.fpdf.PAGE_FORMATS['letter'][0]
 
     pdf = fpdf.FPDF('P', 'mm', 'Letter')
 
+    pdf.add_font('Noteworthy', style='', fname='Noteworthy-Light.ttf', uni=True)
     pdf.add_font('NotoSans', style='', fname='NotoSans-Regular.ttf', uni=True)
     pdf.add_font('NotoSans', style='B', fname='NotoSans-Bold.ttf', uni=True)
 
@@ -124,5 +125,20 @@ def make_pdf(puzzle, filename):
             # pdf.write(3.69, suffix)
             # pdf.write(4.12, suffix)
             # pdf.cell(0, 3.69, suffix)
+
+    if do_include_solution:
+        pdf.set_font('Noteworthy', '', 9)
+        pdf.set_text_color(100, 100, 200)
+        x0 += 0.4 * lane_width
+        y0 += 0.35 * lane_width
+        x, y = 0, 0
+        for i, num in enumerate(puzzle.solution):
+            w = pdf.get_string_width(str(num))
+            pdf.set_xy(x0 - w / 2 + x * lane_width, y0 + y * lane_width)
+            pdf.write(4.2, str(num))
+            x += 1
+            if x == puzzle.size:
+                y += 1
+                x = 0
 
     pdf.output(filename, 'F')

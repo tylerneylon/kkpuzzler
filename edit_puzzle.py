@@ -94,12 +94,18 @@ def get_default_filename(puzzle):
     n = puzzle.size
     return f'puzzle_{n}x{n}_{date_str}.kk'
 
-def make_pdf_using_puzzle_filename(puzzle, puzzle_filename):
+def make_pdf_using_puzzle_filename(
+        puzzle,
+        puzzle_filename,
+        does_include_solution=False):
+
     pdf_filename = puzzle_filename
     if pdf_filename is None:
         pdf_filename = get_default_filename(puzzle)
-    pdf_filename = pdf_filename.split('.', 1)[0] + '.pdf'
-    make_pdf(puzzle, pdf_filename)
+    suffix = '_w_soln' if does_include_solution else ''
+    pdf_filename = pdf_filename.split('.', 1)[0] + suffix + '.pdf'
+    make_pdf(puzzle, pdf_filename, does_include_solution)
+
     return pdf_filename
 
 def update_availale_partitions(stdscr, puzzle):
@@ -273,10 +279,25 @@ def main(stdscr_):
 
             solver.print_human_friendly_soln(puzzle)
 
-        elif key == 'p':              #### p    = make a Pdf of this puzzle.
+        elif key == 'p':
 
-            pdf_filename = make_pdf_using_puzzle_filename(puzzle, filename)
-            show_status(f'pdf written to {pdf_filename}')
+            if prev_leader != '\\':   #### p    = make a Pdf of this puzzle.
+
+                pdf_filename = make_pdf_using_puzzle_filename(puzzle, filename)
+                show_status(f'pdf written to {pdf_filename}')
+
+            else:                     #### \p   = make a pdf incl the soln.
+
+                # Ensure a solution is known.
+                if puzzle.solution is None:
+                    show_status('Finding a solution ...')
+                    puzzle.add_solution(solver.solve_puzzle(puzzle)[0])
+                pdf_filename = make_pdf_using_puzzle_filename(
+                        puzzle,
+                        filename,
+                        does_include_solution = True
+                )
+                show_status(f'pdf written to {pdf_filename}')
 
         elif key == 'o':              #### o    = Open a pdf of this puzzle.
 
