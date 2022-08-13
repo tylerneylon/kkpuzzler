@@ -313,7 +313,7 @@ class Puzzle(object):
                 subline,
                 extra_end_chars='hjkln'
         )
-        if clue is None:
+        if clue is None or clue == '':
             return
         # TODO: Pull the official op characters out into constants that are
         #       shared across files. Currently this one and solver.py.
