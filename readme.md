@@ -1,3 +1,66 @@
+# kkpuzzler
+
+*A terminal-based tool to edit KenKen puzzles.*
+
+This is a little tool I made because I'd like to write a book or
+two about KenKen puzzles, which I enjoy. Currently this tool
+allows you to quickly type in a KenKen puzzle, to automatically
+solve that puzzle, and to create a pdf of that puzzle.
+
+In the future, I am interested in adding features that could assist
+in these things:
+* Explaining a human-friendly step-by-step solution to a puzzle
+* Evaluating the difficulty of a puzzle
+* Coming up with new puzzles of a given difficulty
+
+## Usage
+
+This tool runs on Python 3.
+
+To create a new puzzle, run the editor like so:
+
+    ./edit_puzzle.py
+
+To edit an existing KenKen file (filename extension `.kk`),
+load the file like so:
+
+    ./edit_puzzle.py my_puzzle.kk
+
+By the way, then `.kk` file format is just a JSON object
+with a certain schema. Feel free to examine the files, and
+even to edit them if you understand the schema, which I've
+tried to keep simple
+
+### Keyboard shortcuts
+
+I've modeled the editing interface on vim's most common keyboard
+shortcuts. So if you're familiar with vim, this will feel easy for you.
+If, however, you don't like vim, then, sorry about that! But still,
+it's fun to use once you have a little practice.
+
+Here are the keyboard shortcuts:
+
+
+                   --== Keyboard shortcuts ==--
+    ____________________________________________________________
+
+        hjkl Move the cursor. Wrap-around possible.
+        HJKL Join or split a group via this movement.
+        gg   Jump to the top-left of the puzzle.
+        p    Save a pdf file of this puzzle (no solution).
+        \p   Save a pdf file that includes the solution.
+        o    Save the puzzle to a pdf and open the pdf file.
+        e    Run the experimental puzzle solver.
+        f    Find the solution to the given puzzle.
+        c    Start editing clues at the current group.
+        s    Set the puzzle size.
+        w    Type a filename, this puzzle is saved to that file.
+        \w   Save to a file, choosing a default name if needed.
+        q    Quit.
+        ?    See the help screen.
+
+## Some old notes
+
 (So far this is just a small note for myself.)
 
 * As of 203.2021, I have a "next up" list here:
