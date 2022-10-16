@@ -28,7 +28,7 @@ import partition
 import sevendate
 import solver
 from pdf_maker import make_pdf
-from puzzle import Puzzle
+from puzzle    import Puzzle
 
 
 # ______________________________________________________________________
@@ -114,7 +114,7 @@ def update_availale_partitions(stdscr, puzzle):
         the user if we're in the correct mode; as of this writing, such modes
         are not yet implemented.
 
-        In some cases, value values cannot be found. For example, if there is no
+        In some cases, valid values cannot be found. For example, if there is no
         cursor, or if there is no clue.
     """
     group = puzzle.get_group_at_cursor()
