@@ -16,6 +16,7 @@
 # Standard library imports.
 import curses
 import inspect
+import math
 import os
 import shlex
 import sys
@@ -107,18 +108,46 @@ def draw_help_screen():
         e    Run the experimental puzzle solver.
         f    Find the solution to the given puzzle.
         c    Start editing clues at the current group.
-             Type a clue, then hit return to finish, or
-             n to move to the next unclued group in reading order,
-             or hjkl to move to the next unclued group in that direction.
         s    Set the puzzle size.
         w    Type a filename, this puzzle is saved to that file.
         \w   Save to a file, choosing a default name if needed.
         q    Quit.
-        ?    Toggle this help screen.
+        ?    See this help screen :)
     """).split('\n')
 
-    # TODO Render the help screen.
-    stdscr.addstr(1, 1, 'Here is the unhelpful help screen. sorry :|')
+    cell_width  = max(map(len, helplines))
+    cell_height = 2
+    num_rows = math.ceil(len(helplines) / 2)
+    mid_pad  = 5
+
+    x0 = (w - mid_pad - 2 * cell_width) // 2
+    y0 = (h - cell_height * num_rows) // 2
+
+    def show_cell(cell_x, cell_y, text):
+        ''' Print `text` at 0-indexed position (cell_x, cell_y) in a centered
+            table with num_rows rows and cell sizes cell_{width,height}.
+        '''
+        x = x0 + (cell_width + mid_pad) * cell_x
+        y = y0 + cell_height * cell_y
+        stdscr.addstr(y, x, text)
+
+    def show_centered(y, text):
+        x = (w - len(text)) // 2
+        stdscr.addstr(y, x, text)
+
+    # Draw header text.
+    show_centered(y0 - 5, '--== Keyboard shortcuts ==--')
+    show_centered(y0 - 4, '_' * 60)
+
+    # Draw the help lines.
+    cell_x, cell_y, i = 0, 0, 0
+    while i < len(helplines):
+        show_cell(cell_x, cell_y, helplines[i])
+        i += 1
+        cell_x += 1
+        if cell_x == 2:
+            cell_x = 0
+            cell_y += 1
 
     show_status('Press any key to exit the help screen!')
     key = stdscr.getkey()
@@ -307,6 +336,8 @@ def main(stdscr_):
                     puzzle.cursor = list(pt)
 
         elif key == 'f':              #### f    = Figure it out! (full soln)
+
+            # TODO Error gracefully if we don't have all the clues.
 
             start_time = time.time()
             solns = solver.solve_puzzle(puzzle)
