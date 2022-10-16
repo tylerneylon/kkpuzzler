@@ -88,7 +88,8 @@ def add_char(stdscr, y, x, dirs, name_char=False):
     if name_char:
         stdscr.addstr(y, x + 2, hex(chr_code))
 
-# Modify Textbox behavior to work better with backspaces.
+# This is a modification of curses' Textbox class that works
+# the way I want it to with backspaces.
 class Textbox(curses.textpad.Textbox):
 
     def edit(self, validate=None, extra_end_chars=''):
