@@ -15,6 +15,7 @@
 
 # Standard library imports.
 import curses
+import inspect
 import os
 import shlex
 import sys
@@ -84,6 +85,45 @@ def refresh_screen(puzzle):
     y0 = (h - puzzle_size_y) // 2
 
     return x0, y0
+
+def draw_help_screen():
+    """ Erase the screen and render the help screen, which explains which keys
+        do what. You can toggle this screen by pressing '?'.
+    """
+
+    global stdscr
+
+    stdscr.erase()
+    h, w = stdscr.getmaxyx()
+
+    # helplines is a list of key explanations.
+    helplines = inspect.cleandoc(r"""
+        hjkl Move the cursor. Wrap-around possible.
+        HJKL Join or split a group via this movement.
+        gg   Jump to the top-left of the puzzle.
+        p    Save a pdf file of this puzzle (no solution).
+        \p   Save a pdf file that includes the solution.
+        o    Save the puzzle to a pdf and open the pdf file.
+        e    Run the experimental puzzle solver.
+        f    Find the solution to the given puzzle.
+        c    Start editing clues at the current group.
+             Type a clue, then hit return to finish, or
+             n to move to the next unclued group in reading order,
+             or hjkl to move to the next unclued group in that direction.
+        s    Set the puzzle size.
+        w    Type a filename, this puzzle is saved to that file.
+        \w   Save to a file, choosing a default name if needed.
+        q    Quit.
+        ?    Toggle this help screen.
+    """).split('\n')
+
+    # TODO Render the help screen.
+    stdscr.addstr(1, 1, 'Here is the unhelpful help screen. sorry :|')
+
+    show_status('Press any key to exit the help screen!')
+    key = stdscr.getkey()
+    stdscr.erase()
+    show_status('')
 
 def get_default_filename(puzzle):
     date_str = sevendate.to_string(do_use_digital_format=True)
@@ -179,6 +219,8 @@ def main(stdscr_):
     movements = {'h': (-1, 0), 'j': (0, 1), 'k': (0, -1), 'l': (1, 0)}
 
     leader, prev_leader = '', ''
+
+    show_status('Press ? to see the help screen.')
 
     while True:
 
@@ -315,6 +357,10 @@ def main(stdscr_):
                 puzzle.cursor = [0, 0]
             else:
                 leader = 'g'
+
+        elif key == '?':
+
+            draw_help_screen()
 
 
 if __name__ == '__main__':
